@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Handing the target check-out time to the system Clock app via
+         ACTION_SET_ALARM. Without this the intent throws a PlatformException
+         ("Permission Denial ... requires com.android.alarm.permission.SET_ALARM")
+         and the alarm silently never appears. A mocked channel cannot catch
+         that; only a real device can. -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+
     <application
         android:label="punchme"
         android:name="${applicationName}"
@@ -40,6 +47,10 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Package visibility for the Clock app the alarm intent resolves to. -->
+        <intent>
+            <action android:name="android.intent.action.SET_ALARM"/>
         </intent>
     </queries>
 </manifest>

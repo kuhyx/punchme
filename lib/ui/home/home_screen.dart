@@ -74,12 +74,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _reload() async {
     final days = await widget.repository.loadDays();
+    final settings = await widget.repository.loadSettings();
     if (!mounted) {
       return;
     }
+    // Recompute rather than remember: everything the target depends on is
+    // persisted, so a day that is still open keeps showing its target after
+    // the app is killed and reopened.
+    final today = entryForDay(days, widget.now());
     setState(() {
       _days = days;
       _loading = false;
+      _target = today == null || !today.isOpen
+          ? null
+          : targetForToday(
+              entries: days,
+              settings: settings,
+              checkIn: today.checkIn,
+            );
     });
   }
 
@@ -155,10 +167,21 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => CheckOutAlarmDialog(target: target),
     );
     if (wanted ?? false) {
-      await widget.setAlarm(
-        at: target.checkOutAt,
-        message: 'punchme: check out',
-      );
+      // A missing SET_ALARM permission, or a device with no Clock app, throws
+      // rather than returning. The check-in is already saved by this point,
+      // so a failed alarm must not take the whole flow down with it.
+      try {
+        await widget.setAlarm(
+          at: target.checkOutAt,
+          message: 'punchme: check out',
+        );
+      } on Exception catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not set the alarm')),
+          );
+        }
+      }
     }
   }
 

@@ -19,6 +19,17 @@ Android only. Everything is stored on the device; there is no sync.
 - **Settings** — hours per working day, which weekdays you work, a calendar of
   free days, and exports.
 
+## Today's target
+
+Checking in works out how long today should be: the hours still owed this week,
+split across the working days you have left (today included), rounded to the
+nearest minute. It offers to hand that clock time to the system Clock app as an
+alarm, and shows it under the button while the day runs.
+
+So a Tue/Wed/Thu week at 8h owes 24h. Log 8h23m on the Tuesday and Wednesday's
+target becomes (24h − 8h23m) ÷ 2 = **7h49m** — check out at 16:49. A long day
+early in the week shortens the ones after it.
+
 ## Exports
 
 CSV, JSON, and iCalendar (`.ics`), each handed to the Android share sheet.
@@ -30,9 +41,10 @@ an export **updates** the existing events instead of duplicating your history.
 - A day is exactly one check-in / check-out pair, keyed by the **check-in**
   date — an overnight shift (in 22:00, out 02:00) belongs wholly to the day it
   started on and counts in full.
-- Expected hours accrue only for **completed** working days: today is excluded
-  and shown separately as a running total, so Monday morning reads 0 rather
-  than a full day behind.
+- Expected hours accrue only for **finished** working days. A day you are still
+  checked into is excluded from both sides and shown separately as a running
+  total, so Monday morning reads 0 rather than a full day behind; once you
+  check out, that day's hours count and the day is expected too.
 - Expectation also starts no earlier than your **first recorded day**, so a
   fresh install reads "On track" instead of owing every working day since
   1 January.
