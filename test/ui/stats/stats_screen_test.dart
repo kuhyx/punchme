@@ -81,12 +81,49 @@ void main() {
     expect(find.textContaining('Today so far 3h 00m'), findsNWidgets(3));
   });
 
-  testWidgets('reports worked against expected', (tester) async {
+  testWidgets('reports worked against the whole period quota', (tester) async {
+    // Monday worked 8h, viewed on the Tuesday. The denominator is the full
+    // period, so the three cards no longer read alike: the week quotes
+    // Mon-Fri (40h), the month the rest of August from the first record
+    // (48h), and the year the rest of 2026 (752h).
     await pump(
       tester,
       FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
     );
-    expect(find.textContaining('Worked 8h 00m of 8h 00m'), findsNWidgets(3));
+    expect(find.textContaining('Worked 8h 00m of 40h 00m'), findsOneWidget);
+    expect(find.textContaining('Worked 8h 00m of 48h 00m'), findsOneWidget);
+    expect(find.textContaining('Worked 8h 00m of 752h 00m'), findsOneWidget);
+  });
+
+  testWidgets('the reported Tue/Wed/Thu week reads 8h 23m of 24h', (
+    tester,
+  ) async {
+    // The case this denominator exists for. Checked out on the Tuesday
+    // after 8h 23m: the week is 24h of quota, and the chip still reads the
+    // 23 minutes of surplus rather than a 15h 37m deficit.
+    await pump(
+      tester,
+      FakeDayRepository(
+        days: <DayEntry>[
+          DayEntry(
+            dateKey: '2026-08-25',
+            checkIn: DateTime(2026, 8, 25, 9),
+            checkOut: DateTime(2026, 8, 25, 17, 23),
+          ),
+        ],
+        settings: const Settings().copyWith(
+          workingWeekdays: const <int>{
+            DateTime.tuesday,
+            DateTime.wednesday,
+            DateTime.thursday,
+          },
+        ),
+      ),
+    );
+    // Week and month coincide here: both run Tue 25 - Thu 27 August.
+    expect(find.textContaining('Worked 8h 23m of 24h 00m'), findsNWidgets(2));
+    expect(find.textContaining('Worked 8h 23m of 456h 00m'), findsOneWidget);
+    expect(find.text('+0h 23m'), findsNWidgets(3));
   });
 
   testWidgets('honours custom settings', (tester) async {

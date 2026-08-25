@@ -73,7 +73,7 @@ class BalanceCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Worked ${durationLabel(balance.worked)} of '
-              '${durationLabel(balance.expected)}',
+              '${durationLabel(balance.quota)}',
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: AppTextSize.label,

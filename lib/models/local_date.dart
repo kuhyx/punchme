@@ -43,6 +43,13 @@ DateTime dateFromKey(String key) {
 DateTime nextDay(DateTime date) =>
     DateTime(date.year, date.month, date.day + 1);
 
+/// Returns the local calendar date one day before [date].
+///
+/// Constructor-based for the same reason as [nextDay]: a 24-hour `Duration`
+/// subtracted across a DST boundary lands on the wrong day.
+DateTime previousDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day - 1);
+
 /// Formats [moment] as ISO-8601 *with* its UTC offset.
 ///
 /// `DateTime.toIso8601String()` drops the offset for a local value, which

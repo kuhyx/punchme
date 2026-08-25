@@ -32,6 +32,27 @@ void main() {
     });
   });
 
+  group('previousDay', () {
+    test('steps back one calendar day', () {
+      expect(previousDay(DateTime(2026, 8, 26)), DateTime(2026, 8, 25));
+    });
+
+    test('rolls back over month and year boundaries', () {
+      expect(previousDay(DateTime(2026, 9)), DateTime(2026, 8, 31));
+      expect(previousDay(DateTime(2027)), DateTime(2026, 12, 31));
+    });
+
+    test('handles a leap day', () {
+      expect(previousDay(DateTime(2028, 3)), DateTime(2028, 2, 29));
+    });
+
+    test('lands on local midnight even across a DST boundary', () {
+      final stepped = previousDay(DateTime(2026, 10, 26));
+      expect(stepped.hour, 0);
+      expect(localDateKey(stepped), '2026-10-25');
+    });
+  });
+
   group('nextDay', () {
     test('advances one calendar day', () {
       expect(nextDay(DateTime(2026, 8, 25)), DateTime(2026, 8, 26));

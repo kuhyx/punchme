@@ -29,4 +29,33 @@ void main() {
   test('startOfYear is 1 January at midnight', () {
     expect(startOfYear(tuesday), DateTime(2026));
   });
+
+  test('endOfWeek is the following Monday at midnight', () {
+    expect(endOfWeek(tuesday), DateTime(2026, 8, 31));
+  });
+
+  test('endOfWeek on a Sunday is the very next day', () {
+    expect(endOfWeek(DateTime(2026, 8, 30, 9)), DateTime(2026, 8, 31));
+  });
+
+  test('endOfMonth is the first of next month', () {
+    expect(endOfMonth(tuesday), DateTime(2026, 9));
+  });
+
+  test('endOfMonth rolls December into next January', () {
+    expect(endOfMonth(DateTime(2026, 12, 15)), DateTime(2027));
+  });
+
+  test('endOfYear is next 1 January at midnight', () {
+    expect(endOfYear(tuesday), DateTime(2027));
+  });
+
+  test('a week spans exactly seven days across a DST boundary', () {
+    // Europe/Warsaw ends DST on 2026-10-25, so this week is 169 hours long
+    // in wall-clock terms. The end must still be the Monday, not Sunday
+    // 23:00.
+    final start = startOfWeek(DateTime(2026, 10, 21, 12));
+    expect(start, DateTime(2026, 10, 19));
+    expect(endOfWeek(DateTime(2026, 10, 21, 12)), DateTime(2026, 10, 26));
+  });
 }

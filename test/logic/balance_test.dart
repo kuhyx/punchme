@@ -24,6 +24,7 @@ void main() {
         entries: const <DayEntry>[],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: monday9am,
       );
       expect(balance.expected, Duration.zero);
@@ -37,6 +38,7 @@ void main() {
         entries: <DayEntry>[worked(DateTime(2026, 8, 24))],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.worked, const Duration(hours: 8));
@@ -49,6 +51,7 @@ void main() {
         entries: <DayEntry>[worked(DateTime(2026, 8, 24), hours: 6)],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.difference, const Duration(hours: -2));
@@ -60,6 +63,7 @@ void main() {
         entries: <DayEntry>[worked(DateTime(2026, 8, 24), hours: 10)],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.difference, const Duration(hours: 2));
@@ -77,6 +81,7 @@ void main() {
         entries: <DayEntry>[open],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 28, 9),
       );
       expect(balance.worked, Duration.zero);
@@ -94,6 +99,7 @@ void main() {
         entries: <DayEntry>[today],
         settings: settings,
         from: DateTime(2026, 8, 25),
+        to: DateTime(2026, 8, 31),
         now: now,
       );
       expect(balance.todaySoFar, const Duration(hours: 4));
@@ -109,6 +115,7 @@ void main() {
         entries: <DayEntry>[worked(DateTime(2026, 8, 25), hours: 7)],
         settings: settings,
         from: DateTime(2026, 8, 25),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 18),
       );
       expect(balance.todaySoFar, const Duration(hours: 7));
@@ -129,6 +136,7 @@ void main() {
         entries: <DayEntry>[overnight],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(overnight.dateKey, '2026-08-24');
@@ -144,6 +152,7 @@ void main() {
         ],
         settings: settings,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.worked, const Duration(hours: 8));
@@ -157,6 +166,7 @@ void main() {
         entries: const <DayEntry>[],
         settings: withHoliday,
         from: DateTime(2026, 8, 24),
+        to: DateTime(2026, 8, 31),
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.expected, Duration.zero);

@@ -55,10 +55,11 @@ class _StatsScreenState extends State<StatsScreen> {
     });
   }
 
-  Balance _balanceFrom(DateTime from) => computeBalance(
+  Balance _balanceFor(DateTime from, DateTime to) => computeBalance(
     entries: _days,
     settings: _settings,
     from: from,
+    to: to,
     now: widget.now(),
   );
 
@@ -77,17 +78,17 @@ class _StatsScreenState extends State<StatsScreen> {
         children: <Widget>[
           BalanceCard(
             title: 'This week',
-            balance: _balanceFrom(startOfWeek(now)),
+            balance: _balanceFor(startOfWeek(now), endOfWeek(now)),
           ),
           const SizedBox(height: AppSpacing.md),
           BalanceCard(
             title: 'This month',
-            balance: _balanceFrom(startOfMonth(now)),
+            balance: _balanceFor(startOfMonth(now), endOfMonth(now)),
           ),
           const SizedBox(height: AppSpacing.md),
           BalanceCard(
             title: 'This year',
-            balance: _balanceFrom(startOfYear(now)),
+            balance: _balanceFor(startOfYear(now), endOfYear(now)),
           ),
         ],
       ),
