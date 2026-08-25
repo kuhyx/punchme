@@ -1,0 +1,58 @@
+name: punchme
+description: >-
+  Work-hours check-in / check-out tracker: one big button per day, and an
+  honest answer to "am I ahead or behind?" over the week, month and year.
+publish_to: "none"
+
+# X.Y.Z only; the build suffix is set by CI at release time.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  # Owns the frozen palette and the theme builders. There is deliberately no
+  # local theme.dart, so this app cannot drift off the shared token table.
+  design_system:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: design_system-v0.2.0
+      path: design_system
+
+  flutter:
+    sdk: flutter
+
+  # Export: write to the app's temp dir, then hand the file to the share sheet.
+  # Android-only app, so there is no web/desktop branch to conditionally import.
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  share_plus: ^13.1.0
+
+dev_dependencies:
+  # Generates the Android launcher icons from assets/icon/ -- source art comes
+  # from the shared generator (python_pkg/app_icons in testsAndMisc).
+  flutter_launcher_icons: ^0.14.4
+
+  flutter_test:
+    sdk: flutter
+
+  # Stricter than flutter_lints, and standard across this ecosystem's Flutter
+  # apps. Enables public_member_api_docs, among much else.
+  very_good_analysis: ^10.2.0
+
+flutter:
+  uses-material-design: true
+
+# Launcher icon generation:
+#   PYTHONPATH=~/testsAndMisc python3 -m python_pkg.app_icons generate --app punchme
+#   dart run flutter_launcher_icons
+# The charcoal background is AppPalette.ink; the accent is the one shared
+# family accent, so apps are told apart by glyph shape, not colour.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#211D1B"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
+  min_sdk_android: 21

@@ -1,0 +1,49 @@
+/// punchme: check in, check out, and know where you stand.
+library;
+
+import 'package:design_system/design_system.dart';
+import 'package:flutter/material.dart';
+import 'package:punchme/data/day_repository.dart';
+import 'package:punchme/data/json_day_repository.dart';
+import 'package:punchme/ui/home/home_screen.dart';
+
+// coverage:ignore-line — flutter_test never invokes a Dart entry point, so
+// this one-line delegate is unreachable from the suite. Everything it calls
+// (runPunchme, bootstrap, PunchmeApp) is covered.
+Future<void> main() async => runPunchme();
+
+/// How the built widget tree is handed to the engine.
+///
+/// Injectable purely so [runPunchme] is reachable from a test: the real
+/// `runApp` attaches to an engine that `flutter_test` does not provide.
+typedef RunApp = void Function(Widget app);
+
+/// Boots the app and runs it.
+Future<void> runPunchme({RunApp run = runApp}) async => run(await bootstrap());
+
+/// Opens the on-disk store and builds the widget tree to run.
+///
+/// Split from [main] so the bootstrap is testable: everything except the
+/// `runApp` call, which only a real engine can perform.
+Future<Widget> bootstrap() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final repository = await JsonDayRepository.open();
+  return PunchmeApp(repository: repository);
+}
+
+/// The application root.
+class PunchmeApp extends StatelessWidget {
+  /// Creates the app backed by [repository].
+  const PunchmeApp({required this.repository, super.key});
+
+  /// Where days are read from and written to.
+  final DayRepository repository;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'punchme',
+    theme: buildLightTheme(),
+    darkTheme: buildDarkTheme(),
+    home: HomeScreen(repository: repository),
+  );
+}
