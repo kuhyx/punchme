@@ -89,7 +89,18 @@ Balance computeBalance({
       continue;
     }
     if (entry.dateKey == todayKey) {
-      todaySoFar = entry.worked ?? now.difference(entry.checkIn);
+      final closed = entry.worked;
+      if (closed == null) {
+        // Still running: shown separately so a day in progress never reads
+        // as a deficit.
+        todaySoFar = now.difference(entry.checkIn);
+      } else {
+        // Checked out: those hours are banked, so they count as worked and
+        // today joins the expected days below. Leaving a finished day in
+        // todaySoFar made the whole week read "0h 00m of 0h 00m".
+        todaySoFar = closed;
+        worked += closed;
+      }
       continue;
     }
     // Past day: an open entry is a data gap, worth zero, not elapsed time.
@@ -97,9 +108,12 @@ Balance computeBalance({
   }
 
   final start = _effectiveStart(entries, from);
+  // A day that has been checked out is over, so it is expected too: count up
+  // to tomorrow rather than to today.
+  final countTo = _todayIsClosed(entries, todayKey) ? nextDay(now) : now;
   final days = start == null
       ? 0
-      : completedWorkingDays(from: start, to: now, settings: settings);
+      : completedWorkingDays(from: start, to: countTo, settings: settings);
   return Balance(
     worked: worked,
     expected: settings.requiredPerDay * days,
@@ -124,4 +138,14 @@ DateTime? _effectiveStart(Iterable<DayEntry> entries, DateTime from) {
   }
   final first = dateFromKey(earliest);
   return first.isAfter(from) ? first : from;
+}
+
+/// Whether today's entry exists and has been checked out.
+bool _todayIsClosed(Iterable<DayEntry> entries, String todayKey) {
+  for (final entry in entries) {
+    if (entry.dateKey == todayKey) {
+      return !entry.isOpen;
+    }
+  }
+  return false;
 }

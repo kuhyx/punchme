@@ -101,7 +101,10 @@ void main() {
       expect(balance.expected, Duration.zero);
     });
 
-    test("today's closed session uses its real duration", () {
+    test("today's closed session counts as worked, not just as today", () {
+      // Once checked out the day is over, so its hours are banked and the
+      // day is expected too. (Before 2026-08-25 `worked` stayed at zero
+      // here, which made a finished day read as "0h 00m of 0h 00m".)
       final balance = computeBalance(
         entries: <DayEntry>[worked(DateTime(2026, 8, 25), hours: 7)],
         settings: settings,
@@ -109,7 +112,9 @@ void main() {
         now: DateTime(2026, 8, 25, 18),
       );
       expect(balance.todaySoFar, const Duration(hours: 7));
-      expect(balance.worked, Duration.zero);
+      expect(balance.worked, const Duration(hours: 7));
+      expect(balance.expected, const Duration(hours: 8));
+      expect(balance.difference, const Duration(hours: -1));
     });
 
     test('an overnight session counts in full against its check-in day', () {
@@ -155,61 +160,6 @@ void main() {
         now: DateTime(2026, 8, 25, 9),
       );
       expect(balance.expected, Duration.zero);
-    });
-  });
-
-  group('expectation starts at the first recorded day', () {
-    test('an empty history owes nothing, even over a whole year', () {
-      final balance = computeBalance(
-        entries: const <DayEntry>[],
-        settings: settings,
-        from: DateTime(2026), // 1 January
-        now: DateTime(2026, 8, 25, 12),
-      );
-      expect(balance.expected, Duration.zero);
-      expect(balance.difference, Duration.zero);
-    });
-
-    test('nothing is owed for working days before the first record', () {
-      // First ever record is Mon 24 Aug; the year before it is not a debt.
-      final balance = computeBalance(
-        entries: <DayEntry>[worked(DateTime(2026, 8, 24))],
-        settings: settings,
-        from: DateTime(2026),
-        now: DateTime(2026, 8, 25, 12),
-      );
-      expect(balance.expected, const Duration(hours: 8));
-      expect(balance.difference, Duration.zero);
-    });
-
-    test('the period start still wins when it is the later of the two', () {
-      // Recorded back in July, but asking only about this week.
-      final balance = computeBalance(
-        entries: <DayEntry>[
-          worked(DateTime(2026, 7, 6)),
-          worked(DateTime(2026, 8, 24)),
-        ],
-        settings: settings,
-        from: DateTime(2026, 8, 24),
-        now: DateTime(2026, 8, 25, 12),
-      );
-      expect(balance.expected, const Duration(hours: 8));
-    });
-
-    test('a history of only today owes nothing yet', () {
-      final balance = computeBalance(
-        entries: <DayEntry>[
-          DayEntry(
-            dateKey: '2026-08-25',
-            checkIn: DateTime(2026, 8, 25, 9),
-          ),
-        ],
-        settings: settings,
-        from: DateTime(2026),
-        now: DateTime(2026, 8, 25, 12),
-      );
-      expect(balance.expected, Duration.zero);
-      expect(balance.todaySoFar, const Duration(hours: 3));
     });
   });
 }

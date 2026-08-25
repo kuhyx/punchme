@@ -11,6 +11,10 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  # Hands the check-out time to the system Clock app via ACTION_SET_ALARM,
+  # rather than shipping a notification/alarm stack of our own.
+  android_intent_plus: ^5.0.0
+
   # Owns the frozen palette and the theme builders. There is deliberately no
   # local theme.dart, so this app cannot drift off the shared token table.
   design_system:
@@ -26,6 +30,10 @@ dependencies:
   # Android-only app, so there is no web/desktop branch to conditionally import.
   path: ^1.9.1
   path_provider: ^2.1.5
+
+  # Direct, not transitive: checkout_alarm.dart injects a Platform so the
+  # SET_ALARM intent can be exercised off-Android in tests.
+  platform: ^3.1.6
   share_plus: ^13.1.0
 
 dev_dependencies:

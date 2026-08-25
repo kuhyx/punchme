@@ -7,10 +7,13 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/share_target.dart';
+import 'package:punchme/logic/checkout_alarm.dart';
 import 'package:punchme/logic/day_state.dart';
+import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
 import 'package:punchme/ui/home/check_button.dart';
+import 'package:punchme/ui/home/checkout_alarm_dialog.dart';
 import 'package:punchme/ui/home/home_nav_actions.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
@@ -21,6 +24,7 @@ class HomeScreen extends StatefulWidget {
     required this.repository,
     this.now = DateTime.now,
     this.share = shareTextFile,
+    this.setAlarm = setCheckOutAlarm,
     super.key,
   });
 
@@ -33,6 +37,9 @@ class HomeScreen extends StatefulWidget {
   /// How an exported file reaches the user. Passed through to Settings.
   final ShareFile share;
 
+  /// How a check-out alarm is scheduled. Injected for tests.
+  final SetAlarm setAlarm;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -40,6 +47,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<DayEntry> _days = <DayEntry>[];
   bool _loading = true;
+
+  /// Today's target, once checked in. Null before check-in, or when there is
+  /// nothing meaningful to aim at (non-working day, week already banked).
+  TargetToday? _target;
 
   Timer? _commitTimer;
   Timer? _ticker;
@@ -112,11 +123,43 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     final today = _today;
-    final entry = today == null
+    final checkingIn = today == null;
+    final entry = checkingIn
         ? DayEntry(dateKey: localDateKey(at), checkIn: at)
         : today.closedAt(at);
     await widget.repository.saveDay(entry);
     await _reload();
+    if (checkingIn) {
+      await _offerCheckOutAlarm(at);
+    }
+  }
+
+  /// Works out when today should end and offers to set an alarm for it.
+  ///
+  /// The share is the week's remaining hours split across the working days
+  /// left, today included -- so a long day earlier in the week shortens the
+  /// ones after it.
+  Future<void> _offerCheckOutAlarm(DateTime checkIn) async {
+    final settings = await widget.repository.loadSettings();
+    final target = targetForToday(
+      entries: _days,
+      settings: settings,
+      checkIn: checkIn,
+    );
+    if (target == null || !mounted) {
+      return;
+    }
+    setState(() => _target = target);
+    final wanted = await showDialog<bool>(
+      context: context,
+      builder: (context) => CheckOutAlarmDialog(target: target),
+    );
+    if (wanted ?? false) {
+      await widget.setAlarm(
+        at: target.checkOutAt,
+        message: 'punchme: check out',
+      );
+    }
   }
 
   Future<void> _undo() async {
@@ -165,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TodaySummary(
                 entry: today,
                 now: widget.now,
+                target: state == DayState.checkedIn ? _target : null,
                 onUndo: state == DayState.checkedOut ? _undo : null,
               ),
             ),

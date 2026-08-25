@@ -3,6 +3,7 @@ library;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
 
 /// Formats [moment] as `HH:MM`.
@@ -24,6 +25,7 @@ class TodaySummary extends StatelessWidget {
   const TodaySummary({
     required this.entry,
     required this.now,
+    this.target,
     this.onUndo,
     super.key,
   });
@@ -33,6 +35,9 @@ class TodaySummary extends StatelessWidget {
 
   /// The clock, for the running total of an open day.
   final DateTime Function() now;
+
+  /// Today's target check-out, while the day is running. Null otherwise.
+  final TargetToday? target;
 
   /// Reopens a sealed day. Null unless the day is sealed.
   final VoidCallback? onUndo;
@@ -69,6 +74,15 @@ class TodaySummary extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
+            if (target != null)
+              Text(
+                'Until ${clockLabel(target!.checkOutAt)} '
+                '(${durationLabel(target!.share)})',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: AppTextSize.label,
+                ),
+              ),
             Text(
               durationLabel(total),
               style: TextStyle(
