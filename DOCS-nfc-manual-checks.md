@@ -23,22 +23,43 @@ hotel key works.
 | 9 | Re-run check 8 against an already-written tag | It overwrites cleanly and still reads back |
 | 10 | Turn NFC off, then Settings → Write clock tag → Write tag | `Turn NFC on to write a tag.` |
 | 11 | Start a write, then pull the tag away mid-write | `The tag moved away too soon. Hold it still and try again.` |
-| 12 | Background the app, then tap the tag | Nothing happens — Stage 1 does not handle background taps |
+| 12 | With the app open, tap a tag, then tap it again inside 3 minutes | Only the first punch is written (see check 7) |
 
 A check-in that raises the check-out alarm dialog deliberately shows **no**
 banner: the dialog reports the punch instead, and the banner is cleared so a
 failed-alarm message is not queued behind it. Check 3 is easiest to read on a
 check-*out*, or on a check-in on a non-working day.
 
-## Stage 2 — background and cold start (NOT implemented)
+## Stage 2 — background and cold start (implemented, UNVERIFIED on hardware)
 
-These will fail today. They are listed so the gap is explicit.
+The code has landed and the Dart side of the platform channel is covered by
+the unit suite, driven over a real `MethodChannel` with a mock host. That
+proves the contract, not the hardware: nothing in `flutter test` can deliver
+an actual `NDEF_DISCOVERED` intent, so **checks 13-16 have not been run on a
+phone.** They are the reason this file exists.
 
-| # | Check | Expected once built |
+| # | Check | Expected |
 |---|---|---|
 | 13 | Phone unlocked, app backgrounded, tap the tag | App comes forward and punches |
 | 14 | Kill the app, tap the tag | App launches and logs the punch |
 | 15 | Lock the phone, tap the tag | Punch is recorded; banner appears on next unlock |
+| 16 | Tap a non-punchme tag with the app closed | Nothing launches — the MIME filter does not match |
+
+A background tap deliberately behaves differently from a foreground one:
+
+* **It commits immediately, with no 3s cancel window.** The phone can relock
+  the instant it leaves the tag, which would take an uncommitted punch with
+  it. Undo is on the banner instead.
+* **It never raises the check-out alarm dialog.** A modal needs a screen the
+  user is looking at; a tap against a locked phone has none.
+* **Its banner waits for the next resume.** The punch is already written, so
+  the report is what is deferred, not the write.
+
+On check 13, a second banner reading `Ignored: you punched moments ago` may
+appear a few seconds after the real one if the tag is still against the phone
+when the app comes forward: resuming restarts the foreground reader, which
+reads the same tag again and is refused by the 3-minute guard. That is the
+guard working — no second punch is written.
 
 ## If something fails
 

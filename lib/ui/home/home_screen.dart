@@ -3,7 +3,6 @@ library;
 
 import 'dart:async';
 
-import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/share_target.dart';
@@ -12,13 +11,14 @@ import 'package:punchme/logic/day_state.dart';
 import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
-import 'package:punchme/ui/home/check_button.dart';
+import 'package:punchme/nfc/punch_tag.dart';
+import 'package:punchme/ui/home/background_punch.dart';
 import 'package:punchme/ui/home/checkout_alarm_offer.dart';
 import 'package:punchme/ui/home/commit_window.dart';
+import 'package:punchme/ui/home/home_body.dart';
 import 'package:punchme/ui/home/home_nav_actions.dart';
 import 'package:punchme/ui/home/home_punch_handlers.dart';
 import 'package:punchme/ui/home/punch_banner.dart';
-import 'package:punchme/ui/home/today_summary.dart';
 
 /// The app's landing screen.
 class HomeScreen extends StatefulWidget {
@@ -54,7 +54,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with CommitWindow<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with CommitWindow<HomeScreen>, BackgroundPunch<HomeScreen> {
   List<DayEntry> _days = <DayEntry>[];
   bool _loading = true;
 
@@ -72,7 +73,12 @@ class _HomeScreenState extends State<HomeScreen> with CommitWindow<HomeScreen> {
   void initState() {
     super.initState();
     widget.onReady?.call(
-      HomePunchHandlers(onPunch: onNfcPunch, onBlankTag: onBlankTag),
+      HomePunchHandlers(
+        onPunch: onNfcPunch,
+        onBlankTag: onBlankTag,
+        onBackgroundPunch: commitBackgroundPunch,
+        onResume: flushPendingPunch,
+      ),
     );
     unawaited(_reload());
   }
@@ -153,28 +159,39 @@ class _HomeScreenState extends State<HomeScreen> with CommitWindow<HomeScreen> {
     }
   }
 
-  /// Offers the alarm, and reports whether the dialog was shown.
-  Future<bool> _offerCheckOutAlarm(DateTime checkIn) async {
-    final settings = await widget.repository.loadSettings();
-    if (!mounted) {
-      return false;
-    }
-    final target = await offerCheckOutAlarm(
+  /// Writes a background tap straight through, with no cancel window.
+  @override
+  Future<PunchResult> punchInBackground(PunchTag tag) async {
+    final result = await _coordinator.handlePunch(
+      source: PunchSource.nfcBackground,
+      at: widget.now(),
+      tagLabel: tag.label,
+    );
+    await _reload();
+    return result;
+  }
+
+  @override
+  void reportBackgroundPunch(PunchResult result) =>
+      _showSnack(punchBanner(result: result, onUndo: _undo));
+
+  /// Offers the alarm, adopting the target when the dialog was shown.
+  Future<void> _offerCheckOutAlarm(DateTime checkIn) async {
+    final target = await loadAndOfferCheckOutAlarm(
       context: context,
+      repository: widget.repository,
       // Clearing the banner is the dialog's job, not the punch's: it only
       // happens when a dialog is actually raised, so a check-in with no
       // target keeps the banner that is its only report.
       beforeDialog: () => _messenger?.hideCurrentSnackBar(),
       checkIn: checkIn,
       entries: _days,
-      settings: settings,
       setAlarm: widget.setAlarm,
     );
     if (target == null || !mounted) {
-      return false;
+      return;
     }
     setState(() => _target = target);
-    return true;
   }
 
   @override
@@ -218,28 +235,15 @@ class _HomeScreenState extends State<HomeScreen> with CommitWindow<HomeScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: CheckButton(
-                state: state,
-                onPressed: _onPressed,
-                pending: pending,
-                progress: progress,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: TodaySummary(
-                entry: today,
-                now: widget.now,
-                target: state == DayState.checkedIn ? _target : null,
-                onUndo: state == DayState.checkedOut ? _undo : null,
-              ),
-            ),
-          ],
-        ),
+      body: HomeBody(
+        entry: today,
+        state: state,
+        now: widget.now,
+        onPressed: _onPressed,
+        pending: pending,
+        progress: progress,
+        target: _target,
+        onUndo: _undo,
       ),
     );
   }

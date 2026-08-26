@@ -40,6 +40,16 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Tap-to-clock from outside the app. A custom MIME type routes
+                 straight here with no app chooser, so a tap while the phone is
+                 locked or the app is closed still lands on the coordinator.
+                 With singleTop above, a tap against a running app arrives at
+                 onNewIntent instead of stacking a second activity. -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="application/vnd.kuhy.punchme"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

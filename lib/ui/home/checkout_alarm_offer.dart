@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/logic/checkout_alarm.dart';
 import 'package:punchme/logic/day_state.dart';
 import 'package:punchme/logic/target_time.dart';
@@ -71,4 +72,32 @@ Future<TargetToday?> offerCheckOutAlarm({
     }
   }
   return target;
+}
+
+/// Loads settings, then offers the alarm for the day [checkIn] started.
+///
+/// The settings read is the reason this exists separately from
+/// [offerCheckOutAlarm]: it is an await, so the caller has to re-check that
+/// its context is still mounted afterwards, and doing that in one place keeps
+/// the home screen from carrying the dance itself.
+Future<TargetToday?> loadAndOfferCheckOutAlarm({
+  required BuildContext context,
+  required DayRepository repository,
+  required DateTime checkIn,
+  required List<DayEntry> entries,
+  required SetAlarm setAlarm,
+  VoidCallback? beforeDialog,
+}) async {
+  final settings = await repository.loadSettings();
+  if (!context.mounted) {
+    return null;
+  }
+  return offerCheckOutAlarm(
+    context: context,
+    beforeDialog: beforeDialog,
+    checkIn: checkIn,
+    entries: entries,
+    settings: settings,
+    setAlarm: setAlarm,
+  );
 }
