@@ -5,7 +5,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/data/json_day_repository.dart';
-import 'package:punchme/ui/home/home_screen.dart';
+import 'package:punchme/ui/home/home_with_nfc.dart';
 
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
 // this one-line delegate is unreachable from the suite. Everything it calls
@@ -44,6 +44,6 @@ class PunchmeApp extends StatelessWidget {
     title: 'punchme',
     theme: buildLightTheme(),
     darkTheme: buildDarkTheme(),
-    home: HomeScreen(repository: repository),
+    home: HomeWithNfc(repository: repository),
   );
 }

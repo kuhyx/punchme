@@ -9,12 +9,15 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/share_target.dart';
 import 'package:punchme/logic/checkout_alarm.dart';
 import 'package:punchme/logic/day_state.dart';
+import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
-import 'package:punchme/models/local_date.dart';
 import 'package:punchme/ui/home/check_button.dart';
-import 'package:punchme/ui/home/checkout_alarm_dialog.dart';
+import 'package:punchme/ui/home/checkout_alarm_offer.dart';
+import 'package:punchme/ui/home/commit_window.dart';
 import 'package:punchme/ui/home/home_nav_actions.dart';
+import 'package:punchme/ui/home/home_punch_handlers.dart';
+import 'package:punchme/ui/home/punch_banner.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
 /// The app's landing screen.
@@ -25,6 +28,7 @@ class HomeScreen extends StatefulWidget {
     this.now = DateTime.now,
     this.share = shareTextFile,
     this.setAlarm = setCheckOutAlarm,
+    this.onReady,
     super.key,
   });
 
@@ -40,11 +44,17 @@ class HomeScreen extends StatefulWidget {
   /// How a check-out alarm is scheduled. Injected for tests.
   final SetAlarm setAlarm;
 
+  /// Handed the callbacks that deliver tag reads, once the state exists.
+  ///
+  /// The state class is private, so this is how the NFC plumbing -- and the
+  /// tests standing in for it -- get hold of the tap entry point.
+  final void Function(HomePunchHandlers)? onReady;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with CommitWindow<HomeScreen> {
   List<DayEntry> _days = <DayEntry>[];
   bool _loading = true;
 
@@ -52,24 +62,34 @@ class _HomeScreenState extends State<HomeScreen> {
   /// nothing meaningful to aim at (non-working day, week already banked).
   TargetToday? _target;
 
-  Timer? _commitTimer;
-  Timer? _ticker;
-
-  /// The instant of the FIRST tap. The commit window is a mis-tap guard, not
-  /// a delay: the time recorded is when the user tapped, never 3s later.
-  DateTime? _pendingSince;
+  ScaffoldMessengerState? _messenger;
+  late final PunchCoordinator _coordinator = PunchCoordinator(
+    repository: widget.repository,
+    now: widget.now,
+  );
 
   @override
   void initState() {
     super.initState();
+    widget.onReady?.call(
+      HomePunchHandlers(onPunch: onNfcPunch, onBlankTag: onBlankTag),
+    );
     unawaited(_reload());
   }
 
   @override
   void dispose() {
-    _commitTimer?.cancel();
-    _ticker?.cancel();
+    // A snack bar outlives the widget that showed it, and its dismiss timer
+    // would still be pending after the tree is gone.
+    _messenger?.clearSnackBars();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Captured because dispose() must not touch the element tree.
+    _messenger = ScaffoldMessenger.of(context);
   }
 
   Future<void> _reload() async {
@@ -78,128 +98,111 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) {
       return;
     }
-    // Recompute rather than remember: everything the target depends on is
-    // persisted, so a day that is still open keeps showing its target after
-    // the app is killed and reopened.
-    final today = entryForDay(days, widget.now());
     setState(() {
       _days = days;
       _loading = false;
-      _target = today == null || !today.isOpen
-          ? null
-          : targetForToday(
-              entries: days,
-              settings: settings,
-              checkIn: today.checkIn,
-            );
+      _target = openTargetFor(
+        entries: days,
+        settings: settings,
+        now: widget.now(),
+      );
     });
   }
 
   DayEntry? get _today => entryForDay(_days, widget.now());
 
-  double get _progress {
-    final since = _pendingSince;
-    if (since == null) {
-      return 0;
-    }
-    final elapsed = widget.now().difference(since).inMilliseconds;
-    return elapsed / commitWindow.inMilliseconds;
-  }
+  @override
+  DateTime nowValue() => widget.now();
 
   void _onPressed() {
-    if (_pendingSince != null) {
-      _cancelPending();
+    if (pending) {
+      cancelPending();
       return;
     }
-    setState(() => _pendingSince = widget.now());
-    // Redraw a few times a second so the wash animates without a controller.
-    _ticker = Timer.periodic(
-      const Duration(milliseconds: 50),
-      (_) => setState(() {}),
+    arm(source: PunchSource.button, at: widget.now());
+  }
+
+  /// Commits through the coordinator and surfaces the outcome.
+  ///
+  /// Every source funnels through here, so the button and a tag cannot drift
+  /// apart: the coordinator owns which way the day toggles and what is
+  /// written, and this method owns only what the user is then shown.
+  @override
+  Future<void> commitPunch({
+    required PunchSource source,
+    required DateTime at,
+    String? tagLabel,
+  }) async {
+    final result = await _coordinator.handlePunch(
+      source: source,
+      at: at,
+      tagLabel: tagLabel,
     );
-    _commitTimer = Timer(commitWindow, _commit);
-  }
-
-  void _cancelPending() {
-    _commitTimer?.cancel();
-    _ticker?.cancel();
-    _commitTimer = null;
-    _ticker = null;
-    setState(() => _pendingSince = null);
-  }
-
-  Future<void> _commit() async {
-    final at = _pendingSince;
-    _cancelPending();
-    if (at == null) {
+    await _reload();
+    if (!mounted) {
       return;
     }
-    final today = _today;
-    final checkingIn = today == null;
-    final entry = checkingIn
-        ? DayEntry(dateKey: localDateKey(at), checkIn: at)
-        : today.closedAt(at);
-    await widget.repository.saveDay(entry);
-    await _reload();
-    if (checkingIn) {
+    // The banner goes up first so the modal alarm offer draws on top of it.
+    // It is deliberately short-lived, so anything the alarm flow reports
+    // afterwards is not left queued behind it.
+    _showSnack(punchBanner(result: result, onUndo: _undo));
+    // The alarm offer stays here rather than in the coordinator: it is a modal
+    // dialog, and a background punch has no widget attached to show one from.
+    if (result.checkedIn) {
       await _offerCheckOutAlarm(at);
     }
   }
 
-  /// Works out when today should end and offers to set an alarm for it.
-  ///
-  /// The share is the week's remaining hours split across the working days
-  /// left, today included -- so a long day earlier in the week shortens the
-  /// ones after it.
-  Future<void> _offerCheckOutAlarm(DateTime checkIn) async {
+  /// Offers the alarm, and reports whether the dialog was shown.
+  Future<bool> _offerCheckOutAlarm(DateTime checkIn) async {
     final settings = await widget.repository.loadSettings();
-    final target = targetForToday(
+    if (!mounted) {
+      return false;
+    }
+    final target = await offerCheckOutAlarm(
+      context: context,
+      // Clearing the banner is the dialog's job, not the punch's: it only
+      // happens when a dialog is actually raised, so a check-in with no
+      // target keeps the banner that is its only report.
+      beforeDialog: () => _messenger?.hideCurrentSnackBar(),
+      checkIn: checkIn,
       entries: _days,
       settings: settings,
-      checkIn: checkIn,
+      setAlarm: widget.setAlarm,
     );
     if (target == null || !mounted) {
-      return;
+      return false;
     }
     setState(() => _target = target);
-    final wanted = await showDialog<bool>(
-      context: context,
-      builder: (context) => CheckOutAlarmDialog(target: target),
-    );
-    if (wanted ?? false) {
-      // A missing SET_ALARM permission, or a device with no Clock app, throws
-      // rather than returning. The check-in is already saved by this point,
-      // so a failed alarm must not take the whole flow down with it.
-      try {
-        await widget.setAlarm(
-          at: target.checkOutAt,
-          message: 'punchme: check out',
-        );
-      } on Exception catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not set the alarm')),
-          );
-        }
-      }
-    }
+    return true;
   }
+
+  @override
+  void warnUnknownTagVersion() =>
+      _showSnack(const SnackBar(content: Text(kUnknownTagVersionMessage)));
+
+  @override
+  void warnBlankTag() =>
+      _showSnack(const SnackBar(content: Text(kBlankTagMessage)));
+
+  // Deliberately neither clears nor hides first: the punch banner is often
+  // followed by the alarm flow raising its own message, and dismissing the
+  // current bar here takes that queued message down with it.
+  void _showSnack(SnackBar bar) => _messenger?.showSnackBar(bar);
 
   Future<void> _undo() async {
     final today = _today;
     if (today == null) {
       return;
     }
-    await widget.repository.saveDay(today.reopened());
+    await _coordinator.undoPunch(today);
     await _reload();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final today = _today;
     final state = stateFor(today);
@@ -222,8 +225,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CheckButton(
                 state: state,
                 onPressed: _onPressed,
-                pending: _pendingSince != null,
-                progress: _progress,
+                pending: pending,
+                progress: progress,
               ),
             ),
             Padding(

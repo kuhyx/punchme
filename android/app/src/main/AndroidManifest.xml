@@ -6,6 +6,15 @@
          that; only a real device can. -->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
 
+    <!-- Tap-to-clock. Reader mode (nfc_manager's checkAvailability and
+         startSession) is gated on this permission, so it is needed for the
+         in-app tap, not only for launch-by-tag. Declared not-required so the
+         app still installs on a phone without NFC hardware. -->
+    <uses-permission android:name="android.permission.NFC"/>
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false"/>
+
     <application
         android:label="punchme"
         android:name="${applicationName}"
