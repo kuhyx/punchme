@@ -35,6 +35,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // The free-days calendar makes the page taller than the test viewport, so
+  // anything below it has to be scrolled into range before it can be tapped.
+  Future<void> scrollTo(WidgetTester tester, Finder target) async {
+    await tester.scrollUntilVisible(
+      target,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
   group('hours per day', () {
     testWidgets('shows the current requirement', (tester) async {
       await pump(tester, FakeDayRepository());
@@ -129,35 +140,33 @@ void main() {
 
       // The delete affordance is the chip's trailing button, whatever glyph
       // the current Material version uses for it.
+      await scrollTo(tester, find.byTooltip('Delete'));
       await tester.tap(find.byTooltip('Delete'));
       await tester.pumpAndSettle();
 
       expect((await repo.loadSettings()).freeDays, isEmpty);
     });
+  });
 
-    testWidgets('adding one through the date picker saves it', (tester) async {
+  group('rapid taps', () {
+    testWidgets('every tap survives overlapping saves', (tester) async {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.text('Add free day'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-
-      // The picker opens on `now`, so OK accepts today.
-      expect((await repo.loadSettings()).freeDays, <String>{'2026-08-25'});
-    });
-
-    testWidgets('cancelling the picker changes nothing', (tester) async {
-      final repo = FakeDayRepository();
-      await pump(tester, repo);
-
-      await tester.tap(find.text('Add free day'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
+      // No settle between taps: each one starts a whole-file write while the
+      // previous is still in flight. Without serialising, a later write
+      // carrying an older snapshot would drop the days before it.
+      for (final key in <String>['2026-08-04', '2026-08-05', '2026-08-06']) {
+        await tester.tap(find.byKey(ValueKey<String>('free-day-$key')));
+      }
       await tester.pumpAndSettle();
 
-      expect((await repo.loadSettings()).freeDays, isEmpty);
+      expect((await repo.loadSettings()).freeDays, <String>{
+        '2026-08-04',
+        '2026-08-05',
+        '2026-08-06',
+      });
+      expect(repo.savedSettings.length, 3);
     });
   });
 
@@ -172,6 +181,7 @@ void main() {
 
     testWidgets('CSV shares a .csv file with the header row', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
+      await scrollTo(tester, find.text('CSV'));
       await tester.tap(find.text('CSV'));
       await tester.pumpAndSettle();
 
@@ -182,6 +192,7 @@ void main() {
 
     testWidgets('JSON shares a .json file with the days', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
+      await scrollTo(tester, find.text('JSON'));
       await tester.tap(find.text('JSON'));
       await tester.pumpAndSettle();
 
@@ -191,6 +202,7 @@ void main() {
 
     testWidgets('Calendar shares an .ics file with one event', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
+      await scrollTo(tester, find.text('Calendar'));
       await tester.tap(find.text('Calendar'));
       await tester.pumpAndSettle();
 

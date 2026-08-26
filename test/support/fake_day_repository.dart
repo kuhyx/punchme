@@ -20,6 +20,9 @@ class FakeDayRepository implements DayRepository {
   /// Date keys passed to [deleteDay], in call order.
   final List<String> deletedKeys = <String>[];
 
+  /// Settings saved via [saveSettings], in call order.
+  final List<Settings> savedSettings = <Settings>[];
+
   @override
   Future<List<DayEntry>> loadDays() async =>
       List<DayEntry>.of(_days)..sort((a, b) => a.dateKey.compareTo(b.dateKey));
@@ -43,5 +46,8 @@ class FakeDayRepository implements DayRepository {
   Future<Settings> loadSettings() async => _settings;
 
   @override
-  Future<void> saveSettings(Settings settings) async => _settings = settings;
+  Future<void> saveSettings(Settings settings) async {
+    savedSettings.add(settings);
+    _settings = settings;
+  }
 }
