@@ -25,25 +25,42 @@ hotel key works.
 | 11 | Start a write, then pull the tag away mid-write | `The tag moved away too soon. Hold it still and try again.` |
 | 12 | With the app open, tap a tag, then tap it again inside 3 minutes | Only the first punch is written (see check 7) |
 
+Checks 1 and 8 were confirmed on hardware on 2026-08-27 alongside Stage 2.
+
 A check-in that raises the check-out alarm dialog deliberately shows **no**
 banner: the dialog reports the punch instead, and the banner is cleared so a
 failed-alarm message is not queued behind it. Check 3 is easiest to read on a
 check-*out*, or on a check-in on a non-working day.
 
-## Stage 2 — background and cold start (implemented, UNVERIFIED on hardware)
+## Stage 2 — background and cold start (VERIFIED on hardware 2026-08-27)
 
-The code has landed and the Dart side of the platform channel is covered by
-the unit suite, driven over a real `MethodChannel` with a mock host. That
-proves the contract, not the hardware: nothing in `flutter test` can deliver
-an actual `NDEF_DISCOVERED` intent, so **checks 13-16 have not been run on a
-phone.** They are the reason this file exists.
+Run on the Pixel 6a (23181JEGR08034) against a written NTAG. Each result below
+was read back from the device's own data file via the headless export, not
+from the screen.
 
-| # | Check | Expected |
-|---|---|---|
-| 13 | Phone unlocked, app backgrounded, tap the tag | App comes forward and punches |
-| 14 | Kill the app, tap the tag | App launches and logs the punch |
-| 15 | Lock the phone, tap the tag | Punch is recorded; banner appears on next unlock |
-| 16 | Tap a non-punchme tag with the app closed | Nothing launches — the MIME filter does not match |
+| # | Check | Expected | Result |
+|---|---|---|---|
+| 13 | Phone unlocked, app backgrounded, tap the tag | App comes forward and punches | **PASS** — `LAUNCH_SINGLE_TOP`, warm `onNewIntent`, displayed +88ms |
+| 14 | Kill the app, tap the tag | App launches and logs the punch | **PASS** — from `app died, no saved state`, displayed +174ms |
+| 15 | Lock the phone, tap the tag | See below | **NOT ACHIEVABLE** — Android does not dispatch tags with the screen off |
+| 16 | Tap a non-punchme tag with the app closed | Nothing launches | **PASS** — dispatched `TECH_DISCOVERED` to the system Tag viewer; punchme never invoked |
+
+The 88ms/174ms split is the useful part of 13 vs 14: it shows the two
+genuinely took different paths (warm `onNewIntent` against cold `onCreate`
+buffer plus `getLaunchPunch` drain) rather than both quietly doing the same
+thing. Decoded off the air, the record read
+`application/vnd.kuhy.punchme` / `{"v":1,"tag":"home"}`.
+
+### Check 15: why a screen-off tap cannot work
+
+With the screen off and locked, the NFC controller senses the field
+(`nfa_dm_set_rf_field_info_ntf: val = 0x1`) and then deactivates it without
+ever raising `onTagRfDiscovered` or `dispatchTag`. No app receives the tag,
+so this is platform policy rather than anything punchme can fix. `Secure NFC`
+was off at the time, so that is not the cause either.
+
+In practice the phone is awake by the time it reaches the tag. A tap with the
+screen **on** is what Stage 2 actually has to handle, and 13/14 cover it.
 
 A background tap deliberately behaves differently from a foreground one:
 
@@ -60,6 +77,29 @@ appear a few seconds after the real one if the tag is still against the phone
 when the app comes forward: resuming restarts the foreground reader, which
 reads the same tag again and is refused by the 3-minute guard. That is the
 guard working — no second punch is written.
+
+## Headless export and restore
+
+Both run with no taps, which is what makes destructive testing safe:
+
+```bash
+# Export (json | csv | ics). -f 0x01000000 is FLAG_RECEIVER_INCLUDE_BACKGROUND
+# and is REQUIRED: without it Android silently drops the broadcast whenever the
+# app is not already foregrounded.
+adb shell am broadcast -a com.kuhy.punchme.EXPORT --es format json -f 0x01000000
+adb pull /sdcard/Android/data/com.kuhy.punchme/files/punchme.json
+
+# Restore: push a previously exported file back, then import it.
+adb push backup.json /sdcard/Android/data/com.kuhy.punchme/files/punchme.json
+adb shell am broadcast -a com.kuhy.punchme.IMPORT -f 0x01000000
+```
+
+Verifying a restore needs care. Re-exporting straight afterwards reads the
+file that is already sitting there and will report success whether or not the
+import actually landed. Force-stop the app, delete the file, relaunch, and
+export again — that is the only version of the check that reads the app's own
+store. The first restore attempt on 2026-08-27 silently did nothing and the
+naive check called it byte-identical.
 
 ## If something fails
 

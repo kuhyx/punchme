@@ -56,6 +56,12 @@ DateTime previousDay(DateTime date) =>
 /// would make a stored timestamp mean something different if the machine's
 /// timezone ever changed. Writing the offset pins the real instant.
 String isoWithOffset(DateTime moment) {
+  // A UTC value already carries its own designator: `toIso8601String()` ends
+  // it with `Z`, and appending an offset to that produces `...Z+00:00`, which
+  // does not parse. Only a local value needs the offset spelling out.
+  if (moment.isUtc) {
+    return moment.toIso8601String();
+  }
   final offset = moment.timeZoneOffset;
   final magnitude = offset.abs();
   final sign = offset.isNegative ? '-' : '+';

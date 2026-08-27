@@ -5,6 +5,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/data/json_day_repository.dart';
+import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
 
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
@@ -28,6 +29,10 @@ Future<void> runPunchme({RunApp run = runApp}) async => run(await bootstrap());
 Future<Widget> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   final repository = await JsonDayRepository.open();
+  // Answers headless export broadcasts. Registered on the shared entry point
+  // so a request works whether this engine is the UI one or the short-lived
+  // one an ExportReceiver spins up with the app closed.
+  ExportChannel(repository: repository).listen();
   return PunchmeApp(repository: repository);
 }
 
