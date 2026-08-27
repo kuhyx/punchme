@@ -5,12 +5,20 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-/// The MIME type identifying a punchme clock tag.
+/// The MIME type the daily build identifies a clock tag by.
 ///
 /// Identity is the MIME record, never the tag UID: a custom type routes
 /// straight to this app with no chooser, and needs no enrolment flow, so a
 /// replacement tag works the moment it is written.
 const String kPunchMime = 'application/vnd.kuhy.punchme';
+
+/// The MIME type this build actually reads and writes.
+///
+/// The sandbox flavor overrides it at startup with the value its manifest
+/// filter was built from, so a tag written by the test build cannot punch the
+/// real timesheet and vice versa. Defaults to [kPunchMime], which is both the
+/// daily flavor's value and what the host suite runs with.
+String activePunchMime = kPunchMime;
 
 /// The payload version this build writes.
 const int kPunchTagVersion = 1;

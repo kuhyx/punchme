@@ -7,8 +7,12 @@ import 'dart:typed_data';
 import 'package:nfc_manager/ndef_record.dart';
 import 'package:punchme/nfc/punch_tag.dart';
 
-/// The MIME type as the raw bytes an NDEF record stores in its type field.
-final Uint8List _mimeBytes = Uint8List.fromList(ascii.encode(kPunchMime));
+/// The active MIME type as the raw bytes a record stores in its type field.
+///
+/// Computed per call rather than cached: `activePunchMime` is set once at
+/// startup from the host, and a top-level `final` would freeze the daily
+/// value in before that happened.
+Uint8List get _mimeBytes => Uint8List.fromList(ascii.encode(activePunchMime));
 
 /// Whether [record] is a punchme clock-tag record.
 ///

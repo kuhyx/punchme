@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/data/json_day_repository.dart';
 import 'package:punchme/export/export_channel.dart';
+import 'package:punchme/nfc/background_punch_channel.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
 
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
@@ -28,6 +29,9 @@ Future<void> runPunchme({RunApp run = runApp}) async => run(await bootstrap());
 /// `runApp` call, which only a real engine can perform.
 Future<Widget> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Before anything can read or write a tag: the sandbox flavor must not
+  // interpret the daily build's tags, nor write ones it would accept.
+  await BackgroundPunchChannel().adoptPunchMime();
   final repository = await JsonDayRepository.open();
   // Answers headless export broadcasts. Registered on the shared entry point
   // so a request works whether this engine is the UI one or the short-lived

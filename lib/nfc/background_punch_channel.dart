@@ -23,6 +23,9 @@ const String kGetLaunchPunchMethod = 'getLaunchPunch';
 /// The method Kotlin calls when a tap arrives at an already-running app.
 const String kBackgroundPunchMethod = 'onBackgroundPunch';
 
+/// The method that asks the host which MIME type this build was built with.
+const String kGetPunchMimeMethod = 'getPunchMime';
+
 /// Decodes a channel payload into a tag, or null when there is nothing usable.
 ///
 /// Null covers every shape that is not a tag we can act on: no launch intent
@@ -81,6 +84,24 @@ class BackgroundPunchChannel {
       }
       return null;
     });
+  }
+
+  /// Adopts the MIME type the host's intent filter was built from.
+  ///
+  /// Asked for rather than compiled in, so the manifest filter and the record
+  /// check cannot disagree: the sandbox flavor's tags are then invisible to
+  /// the daily build and vice versa. Off Android there is no host, so the
+  /// compiled-in default stands.
+  Future<void> adoptPunchMime() async {
+    final String? mime;
+    try {
+      mime = await _channel.invokeMethod<String>(kGetPunchMimeMethod);
+    } on MissingPluginException {
+      return;
+    }
+    if (mime != null && mime.isNotEmpty) {
+      activePunchMime = mime;
+    }
   }
 
   /// Stops listening, so a disposed screen cannot be called back into.

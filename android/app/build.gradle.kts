@@ -41,6 +41,36 @@ android {
         }
     }
 
+    // Two installable builds from one source tree. `daily` is the real app;
+    // `sandbox` carries a different applicationId, so Android gives it its own
+    // data directory and it physically cannot read or write the real
+    // timesheet, and a different NFC MIME type, so a test tag can never punch
+    // the real one. The MIME is a manifest placeholder rather than a
+    // --dart-define because the intent filter is read at install time, long
+    // before any Dart runs.
+    flavorDimensions += "store"
+    productFlavors {
+        create("daily") {
+            dimension = "store"
+            manifestPlaceholders["punchMime"] = "application/vnd.kuhy.punchme"
+            buildConfigField("String", "PUNCH_MIME",
+                "\"application/vnd.kuhy.punchme\"")
+        }
+        create("sandbox") {
+            dimension = "store"
+            applicationIdSuffix = ".sandbox"
+            versionNameSuffix = "-sandbox"
+            manifestPlaceholders["punchMime"] =
+                "application/vnd.kuhy.punchme.sandbox"
+            buildConfigField("String", "PUNCH_MIME",
+                "\"application/vnd.kuhy.punchme.sandbox\"")
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.kuhy.punchme"
         // You can update the following values to match your application needs.

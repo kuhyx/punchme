@@ -42,6 +42,10 @@ class MainActivity : FlutterActivity() {
                         result.success(launchPayload)
                         launchPayload = null
                     }
+                    // Dart writes tags, so it needs the flavor's MIME too.
+                    // Asked for rather than duplicated, so there is exactly
+                    // one definition of it per build.
+                    "getPunchMime" -> result.success(PUNCH_MIME)
                     else -> result.notImplemented()
                 }
             }

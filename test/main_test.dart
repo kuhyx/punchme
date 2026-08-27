@@ -4,12 +4,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/main.dart';
+import 'package:punchme/nfc/background_punch_channel.dart';
+import 'package:punchme/nfc/punch_tag.dart';
 import 'package:punchme/ui/home/home_screen.dart';
 
 import 'support/fake_day_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  // `bootstrap` asks the host for its MIME type. Under `testWidgets` the body
+  // runs in a fake-async zone, so an unanswered platform call never completes:
+  // the MissingPluginException that ends it off-device is delivered by the real
+  // event loop, which the fake clock never pumps. Answering it here keeps the
+  // await from hanging the whole file -- and a hung file writes no coverage at
+  // all, which is what dropped PunchmeApp.build out of the report.
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  const nfcChannel = MethodChannel(kNfcChannelName);
+
+  setUp(() {
+    messenger.setMockMethodCallHandler(nfcChannel, (call) async => null);
+  });
+
+  tearDown(() {
+    messenger.setMockMethodCallHandler(nfcChannel, null);
+    activePunchMime = kPunchMime;
+  });
 
   testWidgets('the app root builds and lands on the home screen', (
     tester,
