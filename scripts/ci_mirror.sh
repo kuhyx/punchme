@@ -11,9 +11,11 @@
 #   * the 100% line-coverage gate, which is this repo's hard bar;
 #   * the completeness gate that keeps it honest, since a lib/ file no test
 #     imports is missing from lcov.info entirely rather than reported at 0%;
-#   * `flutter build apk --release`, which is the shipping artefact. This repo
-#     is Android-only, so there is no web build to guard `dart:io` with -- and
-#     no need for one, since dart:io is legal in lib/ here.
+#   * `flutter build apk --release --flavor daily`, the shipping artefact.
+#     Flavor-explicit since the sandbox split: a bare `build apk` writes
+#     app-daily-release.apk and then fails looking for app-release.apk. This
+#     repo is Android-only, so there is no web build to guard `dart:io` with
+#     -- and no need for one, since dart:io is legal in lib/ here.
 # ============================================================================
 
 set -euo pipefail
@@ -177,8 +179,11 @@ main() {
     enforce_coverage_completeness
     enforce_full_coverage
 
-    log "flutter build apk --release"
-    flutter build apk --release
+    # `--flavor daily`: the flavor split means a bare `build apk` produces
+    # app-daily-release.apk and then fails looking for app-release.apk.
+    # CI runs the same line; a gate that builds differently is not a gate.
+    log "flutter build apk --release --flavor daily"
+    flutter build apk --release --flavor daily
 
     echo "CI mirror passed."
 }
