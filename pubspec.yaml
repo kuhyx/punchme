@@ -15,6 +15,25 @@ dependencies:
   # rather than shipping a notification/alarm stack of our own.
   android_intent_plus: ^5.0.0
 
+  # The merge primitives themselves (Record, Hlc, Log). Declared directly, not
+  # leaned on transitively through crdt_sync_flutter: the day codec imports
+  # them by name, which `depend_on_referenced_packages` requires be explicit.
+  crdt_sync:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: crdt_sync_dart-v0.11.0
+      path: crdt_sync_dart
+
+  # Cross-device sync: the shared CRDT log plus the Flutter-side glue
+  # (keystore credentials, the persisted per-install device id). Pulls
+  # crdt_sync itself transitively, whose Record/Hlc merge primitives the day
+  # codec uses directly.
+  crdt_sync_flutter:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: crdt_sync_flutter-v0.2.1
+      path: crdt_sync_flutter
+
   # Owns the frozen palette and the theme builders. There is deliberately no
   # local theme.dart, so this app cannot drift off the shared token table.
   design_system:
