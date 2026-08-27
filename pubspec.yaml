@@ -45,6 +45,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Direct, not transitive: the sync tile names `http.Client` in the seam it
+  # exposes so a test can stand in for the Firebase token exchange, which
+  # `depend_on_referenced_packages` requires be an explicit dependency.
+  http: ^1.6.0
+
   # Tap-to-clock. 4.x splits NDEF into its own package and is pigeon-backed,
   # which is what lets the host suite exercise the real calls over a mocked
   # channel instead of stubbing them out behind a coverage suppression.

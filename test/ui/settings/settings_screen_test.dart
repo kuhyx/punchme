@@ -29,7 +29,15 @@ void main() {
   Future<void> pump(WidgetTester tester, FakeDayRepository repo) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: SettingsScreen(repository: repo, now: now, share: share),
+        home: SettingsScreen(
+          repository: repo,
+          now: now,
+          share: share,
+          // Stubbed: the real probe reads the keystore over a platform
+          // channel no host answers here, which would hang the whole file.
+          syncProbe: () async => false,
+          syncConnect: () async => false,
+        ),
       ),
     );
     await tester.pumpAndSettle();

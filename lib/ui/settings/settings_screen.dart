@@ -12,6 +12,7 @@ import 'package:punchme/nfc/nfc_service.dart';
 import 'package:punchme/ui/settings/export_actions.dart';
 import 'package:punchme/ui/settings/free_days_field.dart';
 import 'package:punchme/ui/settings/hours_field.dart';
+import 'package:punchme/ui/settings/sync_actions.dart';
 import 'package:punchme/ui/settings/weekday_picker.dart';
 import 'package:punchme/ui/settings/write_tag_screen.dart';
 
@@ -23,6 +24,8 @@ class SettingsScreen extends StatefulWidget {
     this.share = shareTextFile,
     this.now = DateTime.now,
     this.nfc,
+    this.syncProbe,
+    this.syncConnect,
     super.key,
   });
 
@@ -40,6 +43,15 @@ class SettingsScreen extends StatefulWidget {
 
   /// The clock, for the date picker and the export timestamps.
   final DateTime Function() now;
+
+  /// Reports whether this device holds a sync session.
+  ///
+  /// Null means "use the real keystore probe". Injected so a widget test
+  /// never reaches a platform channel with no host behind it.
+  final SyncProbe? syncProbe;
+
+  /// Runs the interactive Google sign-in. Null means "use the real one".
+  final SyncConnect? syncConnect;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -131,6 +143,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const SectionHeader('Sync'),
+          SyncActions(
+            probe: widget.syncProbe ?? probeSyncSession,
+            connect: widget.syncConnect ?? connectSyncAccount,
           ),
           const SizedBox(height: AppSpacing.lg),
           const SectionHeader('Export'),

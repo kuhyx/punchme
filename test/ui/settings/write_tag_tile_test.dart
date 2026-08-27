@@ -17,6 +17,8 @@ void main() {
           repository: FakeDayRepository(),
           now: now,
           nfc: nfc,
+          syncProbe: () async => false,
+          syncConnect: () async => false,
         ),
       ),
     );
