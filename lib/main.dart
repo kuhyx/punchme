@@ -1,12 +1,15 @@
 /// punchme: check in, check out, and know where you stand.
 library;
 
+import 'dart:async';
+
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
-import 'package:punchme/data/json_day_repository.dart';
 import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
+import 'package:punchme/sync/sync_bootstrap.dart';
+import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
 
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
@@ -32,7 +35,14 @@ Future<Widget> bootstrap() async {
   // Before anything can read or write a tag: the sandbox flavor must not
   // interpret the daily build's tags, nor write ones it would accept.
   await BackgroundPunchChannel().adoptPunchMime();
-  final repository = await JsonDayRepository.open();
+  // After the MIME is adopted, never before: the sync path is derived from
+  // it, so building the store first would put the sandbox flavor's records on
+  // the daily build's path.
+  final synced = await openSyncedStore();
+  final repository = synced.repository;
+  // Pull whatever the other device recorded while this one was closed. Not
+  // awaited: a cold start must not wait on the network to show the day.
+  unawaited(synced.sync().catchError((_) => SyncOutcome.notConfigured));
   // Answers headless export broadcasts. Registered on the shared entry point
   // so a request works whether this engine is the UI one or the short-lived
   // one an ExportReceiver spins up with the app closed.

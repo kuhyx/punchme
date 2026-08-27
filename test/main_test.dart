@@ -23,12 +23,34 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   const nfcChannel = MethodChannel(kNfcChannelName);
 
+  // `openSyncedStore` reaches SharedPreferences for the device id and the
+  // keystore for a session. Both are platform channels with no host under
+  // `flutter_test`, and an unanswered one hangs the whole file rather than
+  // throwing -- see the note above.
+  const prefsChannel = MethodChannel('plugins.flutter.io/shared_preferences');
+  const secureChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+
   setUp(() {
-    messenger.setMockMethodCallHandler(nfcChannel, (call) async => null);
+    messenger
+      ..setMockMethodCallHandler(nfcChannel, (call) async => null)
+      ..setMockMethodCallHandler(prefsChannel, (call) async {
+        // First launch: no stored id, so the identity is generated and
+        // written back. `setValue` must answer true, not null.
+        if (call.method == 'getAll') return <String, Object?>{};
+        return call.method.startsWith('set') || call.method == 'clear';
+      })
+      // No stored session: the device reads as not enrolled, which is a
+      // normal state and keeps the suite off the network entirely.
+      ..setMockMethodCallHandler(secureChannel, (call) async => null);
   });
 
   tearDown(() {
-    messenger.setMockMethodCallHandler(nfcChannel, null);
+    messenger
+      ..setMockMethodCallHandler(nfcChannel, null)
+      ..setMockMethodCallHandler(prefsChannel, null)
+      ..setMockMethodCallHandler(secureChannel, null);
     activePunchMime = kPunchMime;
   });
 
