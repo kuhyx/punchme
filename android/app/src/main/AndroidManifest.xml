@@ -62,6 +62,7 @@
             <intent-filter>
                 <action android:name="com.kuhy.punchme.EXPORT"/>
                 <action android:name="com.kuhy.punchme.IMPORT"/>
+                <action android:name="com.kuhy.punchme.SYNCCHECK"/>
             </intent-filter>
         </receiver>
         <!-- Don't delete the meta-data below.

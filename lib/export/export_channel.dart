@@ -17,6 +17,9 @@ const String kRunExportMethod = 'runExport';
 /// The method the host calls to restore a JSON export.
 const String kRunImportMethod = 'runImport';
 
+/// The method the host calls to verify this device actually syncs.
+const String kRunSyncCheckMethod = 'runSyncCheck';
+
 /// The formats a headless export can produce.
 ///
 /// Deliberately the same three the Settings buttons offer, rendered by the
@@ -76,10 +79,18 @@ class ExportChannel {
     required this.repository,
     MethodChannel? channel,
     this.now = DateTime.now,
+    this.syncCheck,
   }) : _channel = channel ?? const MethodChannel(kExportChannelName);
 
   /// Where days and settings are read from.
   final DayRepository repository;
+
+  /// Runs one sync verification, or null on a build with no sync wired up.
+  ///
+  /// Injected rather than reached for directly so this channel keeps working
+  /// in a test with no Firebase, and so the export path does not gain a
+  /// dependency on the sync stack it has no other use for.
+  final Future<String> Function()? syncCheck;
 
   /// The clock, used for the iCalendar DTSTAMP.
   final DateTime Function() now;
@@ -89,8 +100,20 @@ class ExportChannel {
   /// Starts answering export requests.
   void listen() {
     _channel.setMethodCallHandler((call) async {
-      if (call.method != kRunExportMethod && call.method != kRunImportMethod) {
+      if (call.method != kRunExportMethod &&
+          call.method != kRunImportMethod &&
+          call.method != kRunSyncCheckMethod) {
         return null;
+      }
+      if (call.method == kRunSyncCheckMethod) {
+        final check = syncCheck;
+        if (check == null) {
+          throw PlatformException(
+            code: 'no-sync',
+            message: 'this build has no sync configured',
+          );
+        }
+        return check();
       }
       if (call.method == kRunImportMethod) {
         final restored = await importJson(

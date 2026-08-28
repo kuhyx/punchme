@@ -29,6 +29,11 @@ class ExportRunner(private val context: Context) {
         Handler(Looper.getMainLooper()).post { start(format, out) }
     }
 
+    /** Verifies this device really syncs, writing the report to [out]. */
+    fun syncCheck(out: String) {
+        Handler(Looper.getMainLooper()).post { start("", out, "runSyncCheck") }
+    }
+
     /** Restores the export in [contents], replacing the days it names. */
     fun restore(contents: String) {
         Handler(Looper.getMainLooper()).post { start(contents, null, "runImport") }

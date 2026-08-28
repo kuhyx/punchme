@@ -9,6 +9,7 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
 import 'package:punchme/sync/sync_bootstrap.dart';
+import 'package:punchme/sync/sync_check.dart';
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
 
@@ -46,9 +47,27 @@ Future<Widget> bootstrap() async {
   // Answers headless export broadcasts. Registered on the shared entry point
   // so a request works whether this engine is the UI one or the short-lived
   // one an ExportReceiver spins up with the app closed.
-  ExportChannel(repository: repository).listen();
+  // The same entry point answers the verification broadcast. It reports
+  // whether a tick actually synced and what the remote now holds for this
+  // device -- never a credential, which is shared across every sibling app
+  // and must not leave the phone.
+  ExportChannel(
+    repository: repository,
+    syncCheck: () => reportSyncCheck(synced),
+  ).listen();
   return PunchmeApp(repository: repository);
 }
+
+/// Runs one verification of [synced] and renders it as JSON.
+///
+/// A named function rather than a closure inside [bootstrap] so the report is
+/// reachable from a test without a platform message -- the wiring above is
+/// then one expression with nothing hidden inside it.
+Future<String> reportSyncCheck(SyncedStore synced) async => (await runSyncCheck(
+  sync: synced.sync,
+  openClient: synced.openClient,
+  deviceId: synced.deviceId,
+)).toJson();
 
 /// The application root.
 class PunchmeApp extends StatelessWidget {

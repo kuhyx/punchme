@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/main.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
 import 'package:punchme/nfc/punch_tag.dart';
+import 'package:punchme/sync/sync_bootstrap.dart';
+import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/home/home_screen.dart';
 
 import 'support/fake_day_repository.dart';
@@ -94,6 +97,26 @@ void main() {
 
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(File('${dir.path}/punchme.json').existsSync(), isFalse);
+
+    // The verification broadcast reaches the sync check that bootstrap wired
+    // up. Driven through the real channel, because the wiring -- not just the
+    // report -- is what an `adb shell am broadcast` depends on.
+    final reply = await TestDefaultBinaryMessengerBinding
+        .instance
+        .defaultBinaryMessenger
+        .handlePlatformMessage(
+          kExportChannelName,
+          const StandardMethodCodec().encodeMethodCall(
+            const MethodCall(kRunSyncCheckMethod),
+          ),
+          (_) {},
+        );
+
+    // Unenrolled in the test environment, which is the honest answer here.
+    expect(
+      const StandardMethodCodec().decodeEnvelope(reply!),
+      contains('notConfigured'),
+    );
   });
 
   testWidgets('runPunchme boots and hands the app to the runner', (
@@ -113,5 +136,24 @@ void main() {
     await runPunchme(run: (app) => handed = app);
 
     expect(handed, isA<PunchmeApp>());
+  });
+
+  testWidgets('reportSyncCheck renders the device report as JSON', (
+    tester,
+  ) async {
+    // The path an `adb shell am broadcast ... SYNCCHECK` takes, minus the
+    // platform message: it must name this device and say whether the tick
+    // actually synced, since a green tile alone proves nothing.
+    final report = await reportSyncCheck(
+      SyncedStore(
+        repository: FakeDayRepository(),
+        sync: () async => SyncOutcome.notConfigured,
+        deviceId: 'device-a',
+        openClient: () async => null,
+      ),
+    );
+
+    expect(report, contains('notConfigured'));
+    expect(report, contains('device-a'));
   });
 }

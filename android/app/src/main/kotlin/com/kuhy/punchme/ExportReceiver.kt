@@ -17,6 +17,18 @@ const val EXPORT_ACTION = "com.kuhy.punchme.EXPORT"
  */
 const val IMPORT_ACTION = "com.kuhy.punchme.IMPORT"
 
+/**
+ * The action that asks the app to prove it actually syncs.
+ *
+ * Reports data, never credentials. The app runs one sync tick and reads back
+ * what the remote holds for this device, so a green tile can be told apart
+ * from a device whose every push silently no-ops. The refresh token stays in
+ * the keystore: it is the shared credential for every sibling app, and the
+ * same "written where only this app can read it" argument does not cover a
+ * secret that is not the user's own data.
+ */
+const val SYNC_CHECK_ACTION = "com.kuhy.punchme.SYNCCHECK"
+
 /** Extra naming the format: `json`, `csv` or `ics`. Defaults to `json`. */
 const val EXTRA_FORMAT = "format"
 
@@ -51,6 +63,10 @@ class ExportReceiver : BroadcastReceiver() {
                 // the result written from its callback; a receiver may not
                 // block.
                 runner.run(format = format, out = out.absolutePath)
+            }
+            SYNC_CHECK_ACTION -> {
+                val out = File(context.getExternalFilesDir(null), "punch_sync_check.json")
+                runner.syncCheck(out.absolutePath)
             }
             IMPORT_ACTION -> {
                 val src = File(context.getExternalFilesDir(null), "punchme.json")

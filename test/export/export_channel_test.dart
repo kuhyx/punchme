@@ -169,6 +169,44 @@ void main() {
       );
     });
 
+    test('runs a sync check when one is wired up', () async {
+      ExportChannel(
+        repository: FakeDayRepository(),
+        channel: channel,
+        syncCheck: () async => '{"outcome":"synced"}',
+      ).listen();
+
+      final reply = await messenger.handlePlatformMessage(
+        kExportChannelName,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall(kRunSyncCheckMethod),
+        ),
+        (_) {},
+      );
+      expect(
+        const StandardMethodCodec().decodeEnvelope(reply!),
+        contains('synced'),
+      );
+    });
+
+    test('reports a build with no sync as an error', () async {
+      // Better than answering "not synced": a build that cannot sync at all
+      // and a device that merely is not enrolled are different problems.
+      ExportChannel(repository: FakeDayRepository(), channel: channel).listen();
+
+      final reply = await messenger.handlePlatformMessage(
+        kExportChannelName,
+        const StandardMethodCodec().encodeMethodCall(
+          const MethodCall(kRunSyncCheckMethod),
+        ),
+        (_) {},
+      );
+      expect(
+        () => const StandardMethodCodec().decodeEnvelope(reply!),
+        throwsA(anything),
+      );
+    });
+
     test('stop detaches the handler', () async {
       ExportChannel(repository: FakeDayRepository(), channel: channel)
         ..listen()

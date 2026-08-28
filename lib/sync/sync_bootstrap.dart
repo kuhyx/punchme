@@ -18,13 +18,27 @@ import 'package:punchme/sync/sync_service.dart';
 /// The synced repository, plus the tick that pushes it.
 class SyncedStore {
   /// Bundles [repository] with the [sync] that publishes its writes.
-  const SyncedStore({required this.repository, required this.sync});
+  const SyncedStore({
+    required this.repository,
+    required this.sync,
+    required this.deviceId,
+    required this.openClient,
+  });
 
   /// What the app reads and writes days through.
   final DayRepository repository;
 
   /// Runs one push/pull tick.
   final Future<SyncOutcome> Function() sync;
+
+  /// The persisted per-install id this device's records are stored under.
+  ///
+  /// Exposed because the verification path has to name the exact remote path
+  /// to read back, and only this side knows the id.
+  final String deviceId;
+
+  /// Opens a signed-in client, or null when this device has no session.
+  final Future<RemoteStore?> Function() openClient;
 }
 
 /// Builds the CRDT-backed repository, migrating the JSON file on first run.
@@ -55,13 +69,15 @@ Future<SyncedStore> openSyncedStore({
     store: store,
   );
 
-  Future<SyncOutcome> tick() => syncNow(
-    store: store,
-    deviceId: me.deviceId,
-    openClient: openClient ?? () => openSync(kSyncApp),
-  );
+  Future<RemoteStore?> open() =>
+      openClient == null ? openSync(kSyncApp) : openClient();
+
+  Future<SyncOutcome> tick() =>
+      syncNow(store: store, deviceId: me.deviceId, openClient: open);
 
   return SyncedStore(
+    deviceId: me.deviceId,
+    openClient: open,
     repository: CrdtDayRepository(
       store: store,
       // Fire-and-forget: a punch must land on screen at once, so the push is
