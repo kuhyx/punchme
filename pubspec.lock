@@ -93,20 +93,20 @@ packages:
     dependency: "direct main"
     description:
       path: crdt_sync_dart
-      ref: "crdt_sync_dart-v0.11.0"
-      resolved-ref: feaaf691037da1580fabc992819180d85a97c90a
+      ref: "crdt_sync_dart-v0.11.1"
+      resolved-ref: "978d32af3af66f0d6500c4c6c0c6df5370ebe9a2"
       url: "https://github.com/kuhyx/utils"
     source: git
-    version: "0.11.0"
+    version: "0.11.1"
   crdt_sync_flutter:
     dependency: "direct main"
     description:
       path: crdt_sync_flutter
-      ref: "crdt_sync_flutter-v0.3.0"
-      resolved-ref: "1c98d39ddb2982e37751bee4871f6f280ab019f2"
+      ref: "crdt_sync_flutter-v0.3.1"
+      resolved-ref: "51700aa89eaf1789ae98491aaa854c54d35b4170"
       url: "https://github.com/kuhyx/utils"
     source: git
-    version: "0.3.0"
+    version: "0.3.1"
   cross_file:
     dependency: transitive
     description:
@@ -127,11 +127,11 @@ packages:
     dependency: "direct main"
     description:
       path: design_system
-      ref: "design_system-v0.2.0"
-      resolved-ref: f7418969cf7e059fdcef92c3686947a6373cc920
+      ref: "design_system-v0.2.1"
+      resolved-ref: "978d32af3af66f0d6500c4c6c0c6df5370ebe9a2"
       url: "https://github.com/kuhyx/utils"
     source: git
-    version: "0.2.0"
+    version: "0.2.1"
   fake_async:
     dependency: transitive
     description:

@@ -21,7 +21,7 @@ dependencies:
   crdt_sync:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_dart-v0.11.0
+      ref: crdt_sync_dart-v0.11.1
       path: crdt_sync_dart
 
   # Cross-device sync: the shared CRDT log plus the Flutter-side glue
@@ -31,7 +31,7 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.3.0
+      ref: crdt_sync_flutter-v0.3.1
       path: crdt_sync_flutter
 
   # Owns the frozen palette and the theme builders. There is deliberately no
@@ -39,7 +39,7 @@ dependencies:
   design_system:
     git:
       url: https://github.com/kuhyx/utils
-      ref: design_system-v0.2.0
+      ref: design_system-v0.2.1
       path: design_system
 
   flutter:
