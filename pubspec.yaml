@@ -13,7 +13,7 @@ environment:
 dependencies:
   # Hands the check-out time to the system Clock app via ACTION_SET_ALARM,
   # rather than shipping a notification/alarm stack of our own.
-  android_intent_plus: ^5.0.0
+  android_intent_plus: 6.1.0
 
   # The merge primitives themselves (Record, Hlc, Log). Declared directly, not
   # leaned on transitively through crdt_sync_flutter: the day codec imports
@@ -31,7 +31,7 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.2.1
+      ref: crdt_sync_flutter-v0.3.0
       path: crdt_sync_flutter
 
   # Owns the frozen palette and the theme builders. There is deliberately no
@@ -48,47 +48,47 @@ dependencies:
   # Direct, not transitive: the session dump names FlutterSecureStorage in
   # the seam it exposes so a test can stand in for the keystore, which
   # `depend_on_referenced_packages` requires be an explicit dependency.
-  flutter_secure_storage: ^10.3.1
+  flutter_secure_storage: 11.0.0
 
   # Direct, not transitive: the connect tile drives the account picker
   # through GoogleSignInPlatform rather than the GoogleSignIn facade. The
   # platform instance is settable, so a hand-written fake lets the suite reach
   # the refusal branches -- the facade's channel would force a coverage
   # suppression over exactly the code this fix is about.
-  google_sign_in_platform_interface: ^3.1.0
+  google_sign_in_platform_interface: 3.1.0
 
   # Direct, not transitive: the sync tile names `http.Client` in the seam it
   # exposes so a test can stand in for the Firebase token exchange, which
   # `depend_on_referenced_packages` requires be an explicit dependency.
-  http: ^1.6.0
+  http: 1.6.0
 
   # Tap-to-clock. 4.x splits NDEF into its own package and is pigeon-backed,
   # which is what lets the host suite exercise the real calls over a mocked
   # channel instead of stubbing them out behind a coverage suppression.
-  nfc_manager: ^4.2.1
-  nfc_manager_ndef: ^1.1.0
+  nfc_manager: 4.2.1
+  nfc_manager_ndef: 1.1.0
 
   # Export: write to the app's temp dir, then hand the file to the share sheet.
   # Android-only app, so there is no web/desktop branch to conditionally import.
-  path: ^1.9.1
-  path_provider: ^2.1.5
+  path: 1.9.1
+  path_provider: 2.1.6
 
   # Direct, not transitive: checkout_alarm.dart injects a Platform so the
   # SET_ALARM intent can be exercised off-Android in tests.
-  platform: ^3.1.6
-  share_plus: ^13.1.0
+  platform: 3.1.6
+  share_plus: 13.3.0
 
 dev_dependencies:
   # Generates the Android launcher icons from assets/icon/ -- source art comes
   # from the shared generator (python_pkg/app_icons in testsAndMisc).
-  flutter_launcher_icons: ^0.14.4
+  flutter_launcher_icons: 0.14.4
 
   flutter_test:
     sdk: flutter
 
   # Stricter than flutter_lints, and standard across this ecosystem's Flutter
   # apps. Enables public_member_api_docs, among much else.
-  very_good_analysis: ^10.2.0
+  very_good_analysis: ^10.3.0
 
 flutter:
   uses-material-design: true

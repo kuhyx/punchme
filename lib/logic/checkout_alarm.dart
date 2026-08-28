@@ -25,8 +25,8 @@ Platform alarmPlatform = const LocalPlatform();
 /// `SKIP_UI: false` deliberately shows the Clock app's own confirmation, so
 /// an alarm is never created behind the user's back.
 ///
-/// android_intent_plus v5 uses `startActivityForResult` and the Clock app
-/// never sends a result, so this times out rather than hanging forever --
+/// android_intent_plus v5 and v6 both use `startActivityForResult` and the
+/// Clock app never sends a result, so this times out rather than hanging --
 /// the same trap wake_alarm hit.
 Future<void> setCheckOutAlarm({
   required DateTime at,

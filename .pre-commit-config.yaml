@@ -47,6 +47,27 @@ repos:
         language: system
         files: \.(md|markdown)$
 
+      # Every dependency on its ecosystem's newest STABLE release, exact-pinned
+      # so the question is mechanically answerable at all.
+      #
+      # `files:` is what keeps this cheap: a commit touching only Dart makes
+      # ZERO network requests, and a manifest commit mostly hits a 6h cache.
+      #
+      # Deliberately WITHOUT --strict. Offline the gate degrades to its cached
+      # answer and passes with a loud banner; `--no-verify` is banned, so a
+      # hook that hard-failed on a flaky connection would leave no way to
+      # commit. CI, always online, runs --strict and is the real authority.
+      - id: dependency-freshness
+        name: dependencies on newest stable
+        entry: scripts/check_dependency_freshness.sh
+        language: system
+        pass_filenames: true
+        files: >-
+          (pubspec\.(yaml|lock)|pyproject\.toml|requirements.*\.txt|uv\.lock
+          |package\.json|package-lock\.json|pnpm-lock\.yaml
+          |Cargo\.(toml|lock)|go\.(mod|sum)
+          |\.fvmrc|\.nvmrc|\.python-version)$
+
       # Minutes-long, so pre-push rather than pre-commit.
       - id: ci-mirror
         name: CI mirror (clean, analyze, format, coverage, apk)

@@ -18,7 +18,11 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.kuhy.punchme"
-    compileSdk = flutter.compileSdkVersion
+    // Pinned above `flutter.compileSdkVersion` (36 on Flutter 3.47.2):
+    // flutter_secure_storage 11.0.0 declares AAR metadata requiring API 37,
+    // and the build fails outright below it. AGP 9.3.2 is what supports 37 --
+    // 9.1.0 caps its recommendation at 36.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
