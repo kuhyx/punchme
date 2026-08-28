@@ -63,9 +63,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      # `.versioncode-offset` is read by scripts/phone_deploy.sh too, so a
+      # local build and a CI build can never disagree about the base. It exists
+      # because the phone was stranded at versionCode 111 by an old
+      # hand-numbered local build while this count was 19: Android compares
+      # versionCode and only ever upward, so nothing could install over it
+      # without an uninstall (which wipes app data). Raising the base is a
+      # one-way door -- the file is the record of why.
       - name: Compute versionCode from the commit count
         id: code
-        run: echo "value=$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          offset=$(cat .versioncode-offset 2>/dev/null || echo 0)
+          echo "value=$(( $(git rev-list --count HEAD) + offset ))" \
+            >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-java@v4
         with:
