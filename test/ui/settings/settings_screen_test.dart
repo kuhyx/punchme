@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/settings.dart';
+import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/settings_screen.dart';
 
 import '../../support/fake_day_repository.dart';
@@ -36,7 +37,7 @@ void main() {
           // Stubbed: the real probe reads the keystore over a platform
           // channel no host answers here, which would hang the whole file.
           syncProbe: () async => false,
-          syncConnect: () async => false,
+          syncConnect: () async => GoogleSignInStatus.cancelled,
         ),
       ),
     );

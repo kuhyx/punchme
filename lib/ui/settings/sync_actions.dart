@@ -6,8 +6,10 @@ import 'dart:async';
 import 'package:crdt_sync_flutter/crdt_sync_flutter.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:punchme/sync/sync_service.dart';
+import 'package:punchme/ui/settings/google_sign_in_result.dart';
 
 /// The project's **Web** OAuth client id.
 ///
@@ -20,8 +22,8 @@ const String kServerClientId =
 /// Whether this device already holds a usable session.
 typedef SyncProbe = Future<bool> Function();
 
-/// Runs the interactive sign-in. True when a session now exists.
-typedef SyncConnect = Future<bool> Function();
+/// Runs the interactive sign-in and says which of three things happened.
+typedef SyncConnect = Future<GoogleSignInStatus> Function();
 
 /// The real probe: asks the keystore, not a local flag.
 ///
@@ -31,24 +33,53 @@ Future<bool> probeSyncSession() => isSyncConfigured(kSyncApp);
 
 /// The real connect: raises the Google picker, then signs in to Firebase.
 ///
-/// False when the user dismisses the picker, which is a choice rather than a
-/// failure and so must not surface as an error.
+/// Reports the three outcomes apart, which is the whole point of this
+/// function. A dismissed picker is a choice and stays quiet; a refusal from
+/// Google -- an unregistered client, a wrong SHA-1 -- is thrown with its
+/// reason attached, because the previous version returned the same `false`
+/// for both and left the user tapping a tile that did nothing.
 ///
-/// [signInFn] replaces the account picker, which reaches a platform channel
+/// [platform] replaces the account picker, which reaches a platform channel
 /// `flutter test` has no host for; [httpClient] replaces the Firebase token
 /// exchange. Both default to the real thing.
-Future<bool> connectSyncAccount({
-  Future<String?> Function()? signInFn,
+Future<GoogleSignInStatus> connectSyncAccount({
+  GoogleSignInPlatform? platform,
   http.Client? httpClient,
 }) async {
+  final attempt = await googleSignInAttempt(
+    serverClientId: kServerClientId,
+    platform: platform,
+  );
+  if (attempt.status != GoogleSignInStatus.succeeded) {
+    if (attempt.status == GoogleSignInStatus.failed) {
+      throw GoogleSignInRefused(attempt.detail!);
+    }
+    return GoogleSignInStatus.cancelled;
+  }
   final client = await signInWithGoogle(
     kSyncApp,
-    tokenFetcher: () =>
-        googleIdToken(serverClientId: kServerClientId, signInFn: signInFn),
+    tokenFetcher: () async => attempt.idToken,
     httpClient: httpClient,
   );
   client?.close();
-  return client != null;
+  // Non-null here by construction: the token was minted above, so
+  // `signInWithGoogle` either returns a client or throws.
+  return GoogleSignInStatus.succeeded;
+}
+
+/// Google declined to mint a token, with the reason it gave.
+///
+/// A named type rather than a bare [StateError] so the tile can show Google's
+/// own words -- "unregistered client" is actionable, "sign-in failed" is not.
+class GoogleSignInRefused implements Exception {
+  /// Creates a refusal described by [reason].
+  const GoogleSignInRefused(this.reason);
+
+  /// Google's explanation, as close to verbatim as the plugin surfaces it.
+  final String reason;
+
+  @override
+  String toString() => reason;
 }
 
 /// Shows whether this device syncs, and connects it when it does not.
@@ -103,22 +134,44 @@ class _SyncActionsState extends State<SyncActions> {
 
   Future<void> _connect() async {
     setState(() => _busy = true);
-    String? failure;
-    try {
-      await widget.connect();
-    } on Object catch (error) {
-      // Surfaced rather than swallowed: a wrong-uid or unregistered-client
-      // failure is a misconfiguration the user has to see, not a silent
-      // return to "Not connected".
-      failure = '$error';
-    }
+    final failure = await _attempt();
     await _refresh();
     if (!mounted || failure == null) {
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Sign-in failed: $failure')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(failure),
+        duration: const Duration(seconds: 10),
+        action: SnackBarAction(label: 'Retry', onPressed: _connect),
+      ),
+    );
+  }
+
+  /// Runs one sign-in and returns the message to show, or null for silence.
+  ///
+  /// Only a dismissed picker is silent. Every other ending -- Google refusing,
+  /// Firebase rejecting the token, or a sign-in that reports success while the
+  /// keystore ends up with no session -- produces a message, because a tile
+  /// that exists to stop sync failing silently must not fail silently itself.
+  Future<String?> _attempt() async {
+    try {
+      final status = await widget.connect();
+      if (status == GoogleSignInStatus.cancelled) {
+        return null;
+      }
+    } on Object catch (error) {
+      // Surfaced rather than swallowed: a wrong-uid or unregistered-client
+      // failure is a misconfiguration the user has to see, not a silent
+      // return to "Not connected".
+      return 'Sign-in failed: $error';
+    }
+    if (await widget.probe()) {
+      return null;
+    }
+    // Google said yes and the keystore still holds nothing. Reporting success
+    // here is what "connected but never syncs" looks like from the outside.
+    return 'Signed in, but no session was stored: this device will not sync.';
   }
 
   @override

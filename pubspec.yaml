@@ -45,6 +45,13 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Direct, not transitive: the connect tile drives the account picker
+  # through GoogleSignInPlatform rather than the GoogleSignIn facade. The
+  # platform instance is settable, so a hand-written fake lets the suite reach
+  # the refusal branches -- the facade's channel would force a coverage
+  # suppression over exactly the code this fix is about.
+  google_sign_in_platform_interface: ^3.1.0
+
   # Direct, not transitive: the sync tile names `http.Client` in the seam it
   # exposes so a test can stand in for the Firebase token exchange, which
   # `depend_on_referenced_packages` requires be an explicit dependency.

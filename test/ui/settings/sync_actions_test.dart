@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/sync_actions.dart';
 
 /// Covers the connect tile, whose whole job is to stop sync failing silently.
@@ -18,7 +19,7 @@ void main() {
       home: Scaffold(
         body: SyncActions(
           probe: probe,
-          connect: connect ?? () async => true,
+          connect: connect ?? () async => GoogleSignInStatus.succeeded,
         ),
       ),
     ),
@@ -62,7 +63,7 @@ void main() {
       probe: () async => connected,
       connect: () async {
         connected = true;
-        return true;
+        return GoogleSignInStatus.succeeded;
       },
     );
     await tester.pumpAndSettle();
@@ -80,8 +81,8 @@ void main() {
       probe: () async => false,
       connect: () async {
         attempts++;
-        // What `signInWithGoogle` returns when the user backs out.
-        return false;
+        // What the picker reports when the user backs out.
+        return GoogleSignInStatus.cancelled;
       },
     );
     await tester.pumpAndSettle();
@@ -112,6 +113,63 @@ void main() {
     expect(find.textContaining('wrong uid'), findsOneWidget);
   });
 
+  testWidgets('a refusal names the unregistered client', (tester) async {
+    await pump(
+      tester,
+      probe: () async => false,
+      connect: () async =>
+          throw const GoogleSignInRefused('UNREGISTERED_ON_API_CONSOLE'),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Connect Google account'));
+    await tester.pumpAndSettle();
+
+    // The exact on-device failure this tile was blind to: Google's own words
+    // reach the screen, so the console entry is the obvious next step.
+    expect(
+      find.textContaining('UNREGISTERED_ON_API_CONSOLE'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a retry runs the sign-in again', (tester) async {
+    var attempts = 0;
+    await pump(
+      tester,
+      probe: () async => false,
+      connect: () async {
+        attempts++;
+        throw const GoogleSignInRefused('nope');
+      },
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Connect Google account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(attempts, 2);
+  });
+
+  testWidgets('a sign-in that stores no session says so', (tester) async {
+    await pump(
+      tester,
+      // Reports success, yet the keystore still holds nothing: the silent
+      // "connected but never syncs" state the whole feature exists to catch.
+      probe: () async => false,
+      connect: () async => GoogleSignInStatus.succeeded,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Connect Google account'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('no session was stored'), findsOneWidget);
+    expect(find.text('Connect Google account'), findsOneWidget);
+  });
+
   testWidgets('an already-connected tile is not tappable', (tester) async {
     var attempts = 0;
     await pump(
@@ -119,7 +177,7 @@ void main() {
       probe: () async => true,
       connect: () async {
         attempts++;
-        return true;
+        return GoogleSignInStatus.succeeded;
       },
     );
     await tester.pumpAndSettle();

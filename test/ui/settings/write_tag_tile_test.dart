@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:punchme/nfc/nfc_service.dart';
+import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/settings_screen.dart';
 import 'package:punchme/ui/settings/write_tag_screen.dart';
 
@@ -18,7 +19,7 @@ void main() {
           now: now,
           nfc: nfc,
           syncProbe: () async => false,
-          syncConnect: () async => false,
+          syncConnect: () async => GoogleSignInStatus.cancelled,
         ),
       ),
     );
