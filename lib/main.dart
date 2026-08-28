@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
+import 'package:punchme/sync/session_dump.dart';
 import 'package:punchme/sync/sync_bootstrap.dart';
 import 'package:punchme/sync/sync_check.dart';
 import 'package:punchme/sync/sync_service.dart';
@@ -54,6 +55,9 @@ Future<Widget> bootstrap() async {
   ExportChannel(
     repository: repository,
     syncCheck: () => reportSyncCheck(synced),
+    // Hands over the shared kuhy-syncs credential, at the owner's explicit
+    // request. See session_dump.dart for what that token actually covers.
+    sessionDump: dumpSession,
   ).listen();
   return PunchmeApp(repository: repository);
 }

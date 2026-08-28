@@ -29,6 +29,11 @@ class ExportRunner(private val context: Context) {
         Handler(Looper.getMainLooper()).post { start(format, out) }
     }
 
+    /** Writes this device's Firebase session to [out]. See the action doc. */
+    fun dumpSession(out: String) {
+        Handler(Looper.getMainLooper()).post { start("", out, "dumpSession") }
+    }
+
     /** Verifies this device really syncs, writing the report to [out]. */
     fun syncCheck(out: String) {
         Handler(Looper.getMainLooper()).post { start("", out, "runSyncCheck") }

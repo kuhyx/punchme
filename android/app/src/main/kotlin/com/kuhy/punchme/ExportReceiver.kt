@@ -29,6 +29,20 @@ const val IMPORT_ACTION = "com.kuhy.punchme.IMPORT"
  */
 const val SYNC_CHECK_ACTION = "com.kuhy.punchme.SYNCCHECK"
 
+/**
+ * The action that writes this device's Firebase session out.
+ *
+ * Unlike every other action here, this moves a *credential* rather than the
+ * user's own data, and the shared one: the same refresh token authenticates
+ * todo, diet_guard, wake_alarm and every sibling app on `kuhy-syncs`. The
+ * "written where only this app can read it" argument that covers the export
+ * is weaker for a secret, which outlives an uninstall on /sdcard and is
+ * visible to anyone holding adb. Present because the credential's owner asked
+ * for it explicitly; prefer SYNCCHECK, which proves syncing works without
+ * moving the token at all.
+ */
+const val DUMP_SESSION_ACTION = "com.kuhy.punchme.DUMPSESSION"
+
 /** Extra naming the format: `json`, `csv` or `ics`. Defaults to `json`. */
 const val EXTRA_FORMAT = "format"
 
@@ -63,6 +77,10 @@ class ExportReceiver : BroadcastReceiver() {
                 // the result written from its callback; a receiver may not
                 // block.
                 runner.run(format = format, out = out.absolutePath)
+            }
+            DUMP_SESSION_ACTION -> {
+                val out = File(context.getExternalFilesDir(null), "punch_session.json")
+                runner.dumpSession(out.absolutePath)
             }
             SYNC_CHECK_ACTION -> {
                 val out = File(context.getExternalFilesDir(null), "punch_sync_check.json")

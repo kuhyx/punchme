@@ -20,6 +20,14 @@ const String kRunImportMethod = 'runImport';
 /// The method the host calls to verify this device actually syncs.
 const String kRunSyncCheckMethod = 'runSyncCheck';
 
+/// The method the host calls to export this device's Firebase session.
+///
+/// Separate from [kRunSyncCheckMethod] on purpose: that one answers the
+/// verification question without moving a secret, and this one hands over the
+/// shared credential. Keeping them distinct means a caller cannot reach the
+/// second while intending the first.
+const String kDumpSessionMethod = 'dumpSession';
+
 /// The formats a headless export can produce.
 ///
 /// Deliberately the same three the Settings buttons offer, rendered by the
@@ -80,6 +88,7 @@ class ExportChannel {
     MethodChannel? channel,
     this.now = DateTime.now,
     this.syncCheck,
+    this.sessionDump,
   }) : _channel = channel ?? const MethodChannel(kExportChannelName);
 
   /// Where days and settings are read from.
@@ -92,6 +101,12 @@ class ExportChannel {
   /// dependency on the sync stack it has no other use for.
   final Future<String> Function()? syncCheck;
 
+  /// Exports the stored Firebase session, or null when unavailable.
+  ///
+  /// Injected like [syncCheck] so the channel stays testable with no
+  /// keystore behind it.
+  final Future<String> Function()? sessionDump;
+
   /// The clock, used for the iCalendar DTSTAMP.
   final DateTime Function() now;
 
@@ -102,8 +117,19 @@ class ExportChannel {
     _channel.setMethodCallHandler((call) async {
       if (call.method != kRunExportMethod &&
           call.method != kRunImportMethod &&
-          call.method != kRunSyncCheckMethod) {
+          call.method != kRunSyncCheckMethod &&
+          call.method != kDumpSessionMethod) {
         return null;
+      }
+      if (call.method == kDumpSessionMethod) {
+        final dump = sessionDump;
+        if (dump == null) {
+          throw PlatformException(
+            code: 'no-session-dump',
+            message: 'this build cannot export a session',
+          );
+        }
+        return dump();
       }
       if (call.method == kRunSyncCheckMethod) {
         final check = syncCheck;

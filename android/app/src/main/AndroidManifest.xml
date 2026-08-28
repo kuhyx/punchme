@@ -63,6 +63,7 @@
                 <action android:name="com.kuhy.punchme.EXPORT"/>
                 <action android:name="com.kuhy.punchme.IMPORT"/>
                 <action android:name="com.kuhy.punchme.SYNCCHECK"/>
+                <action android:name="com.kuhy.punchme.DUMPSESSION"/>
             </intent-filter>
         </receiver>
         <!-- Don't delete the meta-data below.
