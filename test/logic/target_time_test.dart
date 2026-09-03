@@ -3,213 +3,172 @@ import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/settings.dart';
 
+import 'target_time_fixtures.dart';
+
 void main() {
-  // Tue/Wed/Thu at 8h => a 24h week.
-  final settings = const Settings().copyWith(
-    workingWeekdays: const <int>{
-      DateTime.tuesday,
-      DateTime.wednesday,
-      DateTime.thursday,
-    },
-  );
+  // Plain Mon-Fri at 8h. Week of Mon 2026-09-14; check-in Tue 15th 09:00.
+  const settings = Settings();
+  final tuesday9am = DateTime(2026, 9, 15, 9);
 
-  DayEntry logged(String key, Duration length, {int startHour = 9}) {
-    final checkIn = DateTime.parse(key).add(Duration(hours: startHour));
-    return DayEntry(
-      dateKey: key,
-      checkIn: checkIn,
-      checkOut: checkIn.add(length),
-    );
-  }
-
-  group("kuhy's worked example", () {
-    // Logged 8h23m on Tuesday; checking in Wednesday 09:00 leaves 2 working
-    // days (Wed, Thu) and 24h - 8h23m = 15h37m, so 7h48m30s -> 7h49m rounded.
-    final tuesday = logged(
-      '2026-08-25',
-      const Duration(hours: 8, minutes: 23),
-    );
-    final wednesday9am = DateTime(2026, 8, 26, 9);
-
-    test('splits the remaining week across the days left', () {
+  group('the first red card wins', () {
+    test('a week shortfall lands on today in full', () {
+      // kuhy's example: 4 minutes short on Monday => 8h04m on Tuesday.
       final target = targetForToday(
-        entries: <DayEntry>[tuesday],
+        entries: <DayEntry>[
+          logged('2026-09-14', const Duration(hours: 7, minutes: 56)),
+        ],
         settings: settings,
-        checkIn: wednesday9am,
+        checkIn: tuesday9am,
       )!;
-      expect(target.workingDaysLeft, 2);
-      expect(target.remainingThisWeek, const Duration(hours: 15, minutes: 37));
-      expect(target.share, const Duration(hours: 7, minutes: 49));
+      expect(target.level, DeficitLevel.week);
+      expect(target.deficit, const Duration(minutes: 4));
+      expect(target.spreadOver, 1);
+      expect(target.share, const Duration(hours: 8, minutes: 4));
+      expect(target.checkOutAt, DateTime(2026, 9, 15, 17, 4));
+      expect(target.isCapped, isFalse);
     });
 
-    test('turns the share into a check-out time', () {
+    test('a month shortfall spreads over the week left', () {
+      // Last week 6h a day (10h short), this Monday a full day: the week is
+      // green, the month is 10h red, Tue-Fri are 4 days => 2h30m each.
       final target = targetForToday(
-        entries: <DayEntry>[tuesday],
+        entries: <DayEntry>[
+          ...week('2026-09-07', const Duration(hours: 6)),
+          logged('2026-09-14', const Duration(hours: 8)),
+        ],
         settings: settings,
-        checkIn: wednesday9am,
+        checkIn: tuesday9am,
       )!;
-      expect(target.checkOutAt, DateTime(2026, 8, 26, 16, 49));
+      expect(target.level, DeficitLevel.month);
+      expect(target.deficit, const Duration(hours: 10));
+      expect(target.spreadOver, 4);
+      expect(target.share, const Duration(hours: 10, minutes: 30));
+      expect(target.checkOutAt, DateTime(2026, 9, 15, 19, 30));
+    });
+
+    test('a year shortfall spreads over the month left', () {
+      // A short week in August, everything since on target: week and month
+      // are green, the year is 10h red, 12 working days left in September.
+      final target = targetForToday(
+        entries: <DayEntry>[
+          ...week('2026-08-24', const Duration(hours: 6)),
+          ...week('2026-08-31', const Duration(hours: 8)),
+          ...week('2026-09-07', const Duration(hours: 8)),
+          logged('2026-09-14', const Duration(hours: 8)),
+        ],
+        settings: settings,
+        checkIn: tuesday9am,
+      )!;
+      expect(target.level, DeficitLevel.year);
+      expect(target.deficit, const Duration(hours: 10));
+      expect(target.spreadOver, 12);
+      expect(target.share, const Duration(hours: 8, minutes: 50));
+      expect(target.checkOutAt, DateTime(2026, 9, 15, 17, 50));
+    });
+
+    test('a red week is not double-billed by the red month behind it', () {
+      // Both cards red; only the week's 4m is added, not the month's 10h04m.
+      final target = targetForToday(
+        entries: <DayEntry>[
+          ...week('2026-09-07', const Duration(hours: 6)),
+          logged('2026-09-14', const Duration(hours: 7, minutes: 56)),
+        ],
+        settings: settings,
+        checkIn: tuesday9am,
+      )!;
+      expect(target.level, DeficitLevel.week);
+      expect(target.share, const Duration(hours: 8, minutes: 4));
     });
   });
 
-  group('working days left', () {
-    test('counts today when today is a working day', () {
-      // Tuesday: Tue, Wed, Thu all still to come.
-      expect(
-        workingDaysLeftInWeek(now: DateTime(2026, 8, 25), settings: settings),
-        3,
-      );
+  group('never shorter than the required day', () {
+    test('a plain week gives a plain day', () {
+      final target = targetForToday(
+        entries: const <DayEntry>[],
+        settings: settings,
+        checkIn: DateTime(2026, 9, 14, 9), // Monday, nothing recorded
+      )!;
+      expect(target.level, DeficitLevel.none);
+      expect(target.deficit, Duration.zero);
+      expect(target.share, const Duration(hours: 8));
+      expect(target.checkOutAt, DateTime(2026, 9, 14, 17));
     });
 
-    test('shrinks as the week goes on', () {
-      expect(
-        workingDaysLeftInWeek(now: DateTime(2026, 8, 26), settings: settings),
-        2,
-      );
-      expect(
-        workingDaysLeftInWeek(now: DateTime(2026, 8, 27), settings: settings),
-        1,
-      );
+    test('being ahead does not buy a short day', () {
+      final target = targetForToday(
+        entries: <DayEntry>[logged('2026-09-14', const Duration(hours: 9))],
+        settings: settings,
+        checkIn: tuesday9am,
+      )!;
+      expect(target.level, DeficitLevel.none);
+      expect(target.share, const Duration(hours: 8));
     });
 
-    test('is zero once the working days are behind you', () {
-      // Friday, with only Tue/Wed/Thu configured.
-      expect(
-        workingDaysLeftInWeek(now: DateTime(2026, 8, 28), settings: settings),
-        0,
-      );
-    });
-
-    test('skips a free day', () {
-      final withHoliday = settings.copyWith(
-        freeDays: const <String>{'2026-08-26'},
-      );
-      expect(
-        workingDaysLeftInWeek(
-          now: DateTime(2026, 8, 25),
-          settings: withHoliday,
-        ),
-        2,
-      );
+    test("today's own open session is not a shortfall", () {
+      final target = targetForToday(
+        entries: <DayEntry>[
+          DayEntry(dateKey: '2026-09-15', checkIn: tuesday9am),
+        ],
+        settings: settings,
+        checkIn: tuesday9am,
+      )!;
+      expect(target.level, DeficitLevel.none);
+      expect(target.share, const Duration(hours: 8));
     });
   });
 
-  group('remaining this week', () {
-    test('is the full quota before anything is logged', () {
-      expect(
-        remainingThisWeek(
-          entries: const <DayEntry>[],
-          settings: settings,
-          now: DateTime(2026, 8, 25, 9),
-        ),
-        const Duration(hours: 24),
-      );
-    });
-
-    test('excludes today, which is the day being planned', () {
-      final today = logged('2026-08-25', const Duration(hours: 5));
-      expect(
-        remainingThisWeek(
-          entries: <DayEntry>[today],
-          settings: settings,
-          now: DateTime(2026, 8, 25, 15),
-        ),
-        const Duration(hours: 24),
-      );
-    });
-
-    test('never goes negative when the week is over-worked', () {
-      final big = logged('2026-08-25', const Duration(hours: 30));
-      expect(
-        remainingThisWeek(
-          entries: <DayEntry>[big],
-          settings: settings,
-          now: DateTime(2026, 8, 26, 9),
-        ),
-        Duration.zero,
-      );
-    });
-
-    test('ignores days from a previous week', () {
-      final lastWeek = logged('2026-08-18', const Duration(hours: 8));
-      expect(
-        remainingThisWeek(
-          entries: <DayEntry>[lastWeek],
-          settings: settings,
-          now: DateTime(2026, 8, 25, 9),
-        ),
-        const Duration(hours: 24),
-      );
-    });
-
-    test('a forgotten check-out banks nothing', () {
-      final open = DayEntry(
-        dateKey: '2026-08-25',
-        checkIn: DateTime(2026, 8, 25, 9),
-      );
-      expect(
-        remainingThisWeek(
-          entries: <DayEntry>[open],
-          settings: settings,
-          now: DateTime(2026, 8, 26, 9),
-        ),
-        const Duration(hours: 24),
-      );
-    });
-  });
-
-  group('no target to show', () {
-    test('on a non-working day with none left', () {
-      expect(
-        targetForToday(
-          entries: const <DayEntry>[],
-          settings: settings,
-          checkIn: DateTime(2026, 8, 28, 9), // Friday
-        ),
-        isNull,
-      );
-    });
-
-    test('once the week is fully banked', () {
-      final full = <DayEntry>[
-        logged('2026-08-25', const Duration(hours: 24)),
-      ];
-      expect(
-        targetForToday(
-          entries: full,
-          settings: settings,
-          checkIn: DateTime(2026, 8, 26, 9),
-        ),
-        isNull,
-      );
-    });
-  });
-
-  test('a plain 8h Mon-Fri week gives a plain 8h day', () {
-    final target = targetForToday(
-      entries: const <DayEntry>[],
-      settings: const Settings(),
-      checkIn: DateTime(2026, 8, 24, 9), // Monday
-    )!;
-    expect(target.workingDaysLeft, 5);
-    expect(target.share, const Duration(hours: 8));
-    expect(target.checkOutAt, DateTime(2026, 8, 24, 17));
-  });
-
-  test('rounds to the nearest minute, not down', () {
-    // 3 days left, 1 second short of a clean split: must not lose a minute.
-    final target = targetForToday(
-      entries: const <DayEntry>[],
-      settings: const Settings().copyWith(
-        workingWeekdays: const <int>{
-          DateTime.monday,
-          DateTime.tuesday,
-          DateTime.wednesday,
-        },
-        requiredPerDay: const Duration(hours: 8, minutes: 20),
+  test('no target on a non-working day', () {
+    expect(
+      targetForToday(
+        entries: const <DayEntry>[],
+        settings: settings,
+        checkIn: DateTime(2026, 9, 19, 9), // Saturday
       ),
-      checkIn: DateTime(2026, 8, 24, 9),
+      isNull,
+    );
+  });
+
+  test('rounds the slice to the nearest minute, not down', () {
+    // 10m short over 4 days is 2m30s a day: 3m, never 2m.
+    final target = targetForToday(
+      entries: <DayEntry>[
+        ...week('2026-09-07', const Duration(hours: 7, minutes: 58)),
+        logged('2026-09-14', const Duration(hours: 8)),
+      ],
+      settings: settings,
+      checkIn: tuesday9am,
     )!;
-    expect(target.share, const Duration(hours: 8, minutes: 20));
+    expect(target.level, DeficitLevel.month);
+    expect(target.share, const Duration(hours: 8, minutes: 3));
+  });
+
+  group('the midnight cap', () {
+    test('stops at 23:59 and reports what did not fit', () {
+      // A forgotten Monday check-out banks zero: 8h short, so Tuesday would
+      // be 16h — 09:00 + 16h is 01:00, a time the Clock alarm cannot carry.
+      final target = targetForToday(
+        entries: <DayEntry>[
+          DayEntry(dateKey: '2026-09-14', checkIn: DateTime(2026, 9, 14, 9)),
+        ],
+        settings: settings,
+        checkIn: tuesday9am,
+      )!;
+      expect(target.deficit, const Duration(hours: 8));
+      expect(target.isCapped, isTrue);
+      expect(target.checkOutAt, DateTime(2026, 9, 15, 23, 59));
+      expect(target.share, const Duration(hours: 14, minutes: 59));
+      expect(target.uncovered, const Duration(hours: 1, minutes: 1));
+    });
+
+    test('leaves a check-out that lands before midnight alone', () {
+      final target = targetForToday(
+        entries: const <DayEntry>[],
+        settings: settings,
+        checkIn: DateTime(2026, 9, 15, 15, 59),
+      )!;
+      expect(target.isCapped, isFalse);
+      expect(target.checkOutAt, DateTime(2026, 9, 15, 23, 59));
+      expect(target.uncovered, Duration.zero);
+    });
   });
 }

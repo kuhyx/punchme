@@ -34,8 +34,8 @@ TargetToday? openTargetFor({
 ///
 /// Returns the target when the dialog was actually shown, so the caller can
 /// tell whether the user has already been told the day began, and null when
-/// there was nothing worth aiming at (a non-working day, or a week already
-/// banked). Split out of the home screen to keep it under the length cap.
+/// there was nothing worth aiming at (a non-working day). Split out of the
+/// home screen to keep it under the length cap.
 Future<TargetToday?> offerCheckOutAlarm({
   required BuildContext context,
   required DateTime checkIn,

@@ -55,13 +55,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Tuesday, 8h23m logged.
+  /// Tuesday, 7h56m logged: 4 minutes short.
   DayEntry tuesday() {
     final checkIn = DateTime(2026, 8, 25, 9);
     return DayEntry(
       dateKey: '2026-08-25',
       checkIn: checkIn,
-      checkOut: checkIn.add(const Duration(hours: 8, minutes: 23)),
+      checkOut: checkIn.add(const Duration(hours: 7, minutes: 56)),
     );
   }
 
@@ -83,7 +83,7 @@ void main() {
       await pump(tester, repo);
 
       expect(find.text('CHECK OUT'), findsOneWidget);
-      expect(find.textContaining('Until 16:49'), findsOneWidget);
+      expect(find.textContaining('Until 17:04'), findsOneWidget);
       // Nothing is proposed on a plain reopen -- only on a fresh check-in.
       expect(find.text('Checked in'), findsNothing);
       expect(alarms, isEmpty);

@@ -55,32 +55,32 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Tuesday, 8h23m logged.
+  /// Tuesday, 7h56m logged: 4 minutes short.
   DayEntry tuesday() {
     final checkIn = DateTime(2026, 8, 25, 9);
     return DayEntry(
       dateKey: '2026-08-25',
       checkIn: checkIn,
-      checkOut: checkIn.add(const Duration(hours: 8, minutes: 23)),
+      checkOut: checkIn.add(const Duration(hours: 7, minutes: 56)),
     );
   }
 
   group('the offer', () {
-    testWidgets('checking in proposes the split target', (tester) async {
+    testWidgets('checking in proposes making up the week', (tester) async {
       await pump(
         tester,
         FakeDayRepository(days: <DayEntry>[tuesday()], settings: settings),
       );
       await checkIn(tester);
 
-      // 24h - 8h23m = 15h37m over Wed+Thu => 7h49m, so 09:00 + 7h49m.
+      // 4 minutes short on Tuesday => 8h04m today, so 09:00 + 8h04m.
       expect(find.text('Checked in'), findsOneWidget);
       expect(
-        find.textContaining('Work 7h 49m today, until 16:49.'),
+        find.textContaining('Work 8h 04m today, until 17:04.'),
         findsOneWidget,
       );
       expect(
-        find.textContaining('15h 37m left this week over 2 days'),
+        find.textContaining('0h 04m behind this week — all today.'),
         findsOneWidget,
       );
     });
@@ -95,7 +95,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(alarms, hasLength(1));
-      expect(alarms.single.at, DateTime(2026, 8, 26, 16, 49));
+      expect(alarms.single.at, DateTime(2026, 8, 26, 17, 4));
       expect(alarms.single.message, contains('check out'));
     });
 
@@ -122,7 +122,7 @@ void main() {
       await tester.tap(find.text('Not now'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Until 16:49'), findsOneWidget);
+      expect(find.textContaining('Until 17:04'), findsOneWidget);
     });
 
     testWidgets('checking OUT does not propose an alarm', (tester) async {
@@ -149,22 +149,27 @@ void main() {
       expect(find.text('Checked in'), findsNothing);
       expect(alarms, isEmpty);
     });
+  });
 
-    testWidgets('nothing is proposed once the week is banked', (tester) async {
-      final big = DayEntry(
-        dateKey: '2026-08-25',
-        checkIn: DateTime(2026, 8, 25, 6),
-        checkOut: DateTime(2026, 8, 26, 6), // 24h in one go
-      );
-      await pump(
-        tester,
-        FakeDayRepository(days: <DayEntry>[big], settings: settings),
-      );
-      await checkIn(tester);
+  testWidgets('a banked week still proposes a plain day', (tester) async {
+    // Being ahead never shortens a day: the required 8h stands.
+    final big = DayEntry(
+      dateKey: '2026-08-25',
+      checkIn: DateTime(2026, 8, 25, 6),
+      checkOut: DateTime(2026, 8, 26, 6), // 24h in one go
+    );
+    await pump(
+      tester,
+      FakeDayRepository(days: <DayEntry>[big], settings: settings),
+    );
+    await checkIn(tester);
 
-      expect(find.text('Checked in'), findsNothing);
-      expect(alarms, isEmpty);
-    });
+    expect(find.text('Checked in'), findsOneWidget);
+    expect(
+      find.textContaining('Work 8h 00m today, until 17:00.'),
+      findsOneWidget,
+    );
+    expect(find.text('On track, nothing to make up.'), findsOneWidget);
   });
 
   testWidgets('a plain Mon-Fri week proposes a plain 8h day', (tester) async {

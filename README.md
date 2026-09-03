@@ -21,14 +21,23 @@ Android only. Everything is stored on the device; there is no sync.
 
 ## Today's target
 
-Checking in works out how long today should be: the hours still owed this week,
-split across the working days you have left (today included), rounded to the
-nearest minute. It offers to hand that clock time to the system Clock app as an
-alarm, and shows it under the button while the day runs.
+Checking in works out how long today should be so that no statistics card
+stays red: the required day, plus a slice of the first card that is behind.
+It offers to hand that clock time to the system Clock app as an alarm, and
+shows it under the button while the day runs.
 
-So a Tue/Wed/Thu week at 8h owes 24h. Log 8h23m on the Tuesday and Wednesday's
-target becomes (24h − 8h23m) ÷ 2 = **7h49m** — check out at 16:49. A long day
-early in the week shortens the ones after it.
+- **Week** behind → the whole shortfall is added to today. 7h56m on Monday
+  makes Tuesday's target **8h04m** — check in at 09:00, out at 17:04.
+- Week fine, **month** behind → the month's shortfall is spread over the
+  working days left in the week, today included.
+- Week and month fine, **year** behind → the year's shortfall is spread over
+  the working days left in the month, today included.
+
+The numbers are the ones the statistics cards show, so the alarm and the red
+chip never disagree. Being ahead never shortens a day — the target is always
+at least the required day. The check-out is capped at 23:59: the Clock alarm
+carries only an hour and a minute, so a time past midnight would fire at the
+wrong moment today; the dialog says how much is still uncovered.
 
 ## Exports
 

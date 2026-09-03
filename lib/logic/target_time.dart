@@ -1,10 +1,30 @@
-/// Working out when to check out, so the week lands on its target.
+/// Working out when to check out, so no statistics card stays red.
 library;
 
 import 'package:punchme/logic/balance.dart';
+import 'package:punchme/logic/periods.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
 import 'package:punchme/models/settings.dart';
+
+/// Which statistics card today's extra time is repaying.
+///
+/// Ordered by precedence: the first red card wins, because a month's deficit
+/// already contains its weeks' and a year's contains its months'. Summing
+/// them would bill the same missing minutes twice.
+enum DeficitLevel {
+  /// Every card is green — a plain day.
+  none,
+
+  /// Behind this week: the whole shortfall is added to today.
+  week,
+
+  /// Behind this month: the shortfall is spread over the week's days left.
+  month,
+
+  /// Behind this year: the shortfall is spread over the month's days left.
+  year,
+}
 
 /// How long today should last, and when that means checking out.
 class TargetToday {
@@ -12,37 +32,53 @@ class TargetToday {
   const TargetToday({
     required this.share,
     required this.checkOutAt,
-    required this.remainingThisWeek,
-    required this.workingDaysLeft,
+    required this.level,
+    required this.deficit,
+    required this.spreadOver,
+    required this.uncovered,
   });
 
-  /// How long to work today: the week's remaining hours split evenly across
-  /// the working days left, today included.
+  /// How long to work today: the required day plus today's slice of the
+  /// deficit at [level]. Never shorter than the required day — being ahead
+  /// does not buy a short day, only being behind buys a long one.
   final Duration share;
 
   /// The clock time that [share] works out to, given today's check-in.
   final DateTime checkOutAt;
 
-  /// Hours still owed this week before today is counted.
-  final Duration remainingThisWeek;
+  /// The first red card, or [DeficitLevel.none] when all are green.
+  final DeficitLevel level;
 
-  /// Working days left in the week, today included.
-  final int workingDaysLeft;
+  /// How far behind the [level] card is (positive), zero when on track.
+  final Duration deficit;
+
+  /// Working days the deficit is split across, today included.
+  final int spreadOver;
+
+  /// The part of today's slice that the midnight cap cut off.
+  ///
+  /// The Clock intent carries only an hour and a minute, so a check-out past
+  /// midnight would be set for a time already gone *today*. Rather than fire
+  /// an alarm at the wrong moment, the target stops at 23:59 and reports
+  /// what is left over.
+  final Duration uncovered;
+
+  /// Whether the midnight cap shortened today's slice.
+  bool get isCapped => uncovered > Duration.zero;
 }
 
-/// Counts working days from [now]'s date to the end of its week, inclusive.
+/// Counts working days from [now]'s date up to (excluding) [until].
 ///
 /// Today counts when it is a working day, because the point of the split is
 /// to decide how long *today* should be.
-int workingDaysLeftInWeek({
+int workingDaysLeft({
   required DateTime now,
+  required DateTime until,
   required Settings settings,
 }) {
   var count = 0;
   var cursor = DateTime(now.year, now.month, now.day);
-  // Monday is weekday 1, so a week has `7 - weekday + 1` days left from here.
-  final daysToSunday = DateTime.sunday - cursor.weekday;
-  for (var offset = 0; offset <= daysToSunday; offset++) {
+  while (cursor.isBefore(until)) {
     if (isWorkingDay(localDateKey(cursor), settings)) {
       count++;
     }
@@ -51,76 +87,85 @@ int workingDaysLeftInWeek({
   return count;
 }
 
-/// Hours still owed across the whole week, minus what is already banked.
-///
-/// The week's quota counts only the days that are actually working days, so
-/// a Tue/Wed/Thu week at 8h owes 24h, not 40.
-Duration remainingThisWeek({
-  required Iterable<DayEntry> entries,
-  required Settings settings,
+/// Working days from [now]'s date to the end of its week, today included.
+int workingDaysLeftInWeek({
   required DateTime now,
-}) {
-  final weekStart = DateTime(now.year, now.month, now.day - (now.weekday - 1));
-  var workingDays = 0;
-  var cursor = weekStart;
-  for (var offset = 0; offset < DateTime.daysPerWeek; offset++) {
-    if (isWorkingDay(localDateKey(cursor), settings)) {
-      workingDays++;
-    }
-    cursor = nextDay(cursor);
-  }
+  required Settings settings,
+}) => workingDaysLeft(now: now, until: endOfWeek(now), settings: settings);
 
-  final todayKey = localDateKey(now);
-  final weekStartKey = localDateKey(weekStart);
-  var banked = Duration.zero;
-  for (final entry in entries) {
-    if (entry.dateKey.compareTo(weekStartKey) < 0) {
-      continue;
-    }
-    // Today's own session is deliberately excluded: it is the day being
-    // planned, not a day already banked.
-    if (entry.dateKey.compareTo(todayKey) >= 0) {
-      continue;
-    }
-    banked += entry.worked ?? Duration.zero;
-  }
-
-  final quota = settings.requiredPerDay * workingDays;
-  final left = quota - banked;
-  return left.isNegative ? Duration.zero : left;
-}
+/// Working days from [now]'s date to the end of its month, today included.
+int workingDaysLeftInMonth({
+  required DateTime now,
+  required Settings settings,
+}) => workingDaysLeft(now: now, until: endOfMonth(now), settings: settings);
 
 /// Works out how long today should be, given a check-in at [checkIn].
 ///
-/// Splits the week's remaining hours evenly across the working days left
-/// (today included) and rounds to the nearest whole minute. Returns null when
-/// today is not a working day, or the week is already fully banked — there is
-/// no meaningful target to show.
+/// Starts from the required day and adds a slice of the first red statistics
+/// card, in the same numbers the cards themselves show (today's open session
+/// excluded): the week's shortfall lands on today in full, the month's is
+/// spread over the working days left in the week, the year's over the working
+/// days left in the month. Rounds to the nearest whole minute and caps the
+/// check-out at 23:59 of the check-in day. Returns null when today is not a
+/// working day — there is no meaningful target to show.
 TargetToday? targetForToday({
   required Iterable<DayEntry> entries,
   required Settings settings,
   required DateTime checkIn,
 }) {
-  final daysLeft = workingDaysLeftInWeek(now: checkIn, settings: settings);
-  if (daysLeft == 0) {
+  if (!isWorkingDay(localDateKey(checkIn), settings)) {
     return null;
   }
-  final remaining = remainingThisWeek(
-    entries: entries,
-    settings: settings,
-    now: checkIn,
-  );
-  if (remaining == Duration.zero) {
-    return null;
+  Duration behind(DateTime from, DateTime to) {
+    final difference = computeBalance(
+      entries: entries,
+      settings: settings,
+      from: from,
+      to: to,
+      now: checkIn,
+    ).difference;
+    return difference.isNegative ? -difference : Duration.zero;
   }
-  // Round to the nearest minute rather than truncating, so three days of an
-  // odd remainder do not quietly lose up to three minutes.
-  final seconds = remaining.inSeconds / daysLeft;
-  final share = Duration(minutes: (seconds / 60).round());
+
+  var level = DeficitLevel.none;
+  var deficit = Duration.zero;
+  var spreadOver = 1;
+  final week = behind(startOfWeek(checkIn), endOfWeek(checkIn));
+  final month = behind(startOfMonth(checkIn), endOfMonth(checkIn));
+  final year = behind(startOfYear(checkIn), endOfYear(checkIn));
+  if (week > Duration.zero) {
+    level = DeficitLevel.week;
+    deficit = week;
+  } else if (month > Duration.zero) {
+    level = DeficitLevel.month;
+    deficit = month;
+    spreadOver = workingDaysLeftInWeek(now: checkIn, settings: settings);
+  } else if (year > Duration.zero) {
+    level = DeficitLevel.year;
+    deficit = year;
+    spreadOver = workingDaysLeftInMonth(now: checkIn, settings: settings);
+  }
+
+  // Round to the nearest minute rather than truncating, so several days of an
+  // odd remainder do not quietly lose a minute each.
+  final sliceSeconds = deficit.inSeconds / spreadOver;
+  final slice = Duration(minutes: (sliceSeconds / 60).round());
+  var share = settings.requiredPerDay + slice;
+  var checkOutAt = checkIn.add(share);
+  var uncovered = Duration.zero;
+  final lastMinute = DateTime(checkIn.year, checkIn.month, checkIn.day, 23, 59);
+  if (checkOutAt.isAfter(lastMinute)) {
+    final fits = lastMinute.difference(checkIn);
+    uncovered = share - fits;
+    share = fits;
+    checkOutAt = lastMinute;
+  }
   return TargetToday(
     share: share,
-    checkOutAt: checkIn.add(share),
-    remainingThisWeek: remaining,
-    workingDaysLeft: daysLeft,
+    checkOutAt: checkOutAt,
+    level: level,
+    deficit: deficit,
+    spreadOver: spreadOver,
+    uncovered: uncovered,
   );
 }
