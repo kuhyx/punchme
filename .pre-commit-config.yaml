@@ -34,7 +34,7 @@ repos:
 
   - repo: local
     hooks:
-      # Both gates are thin delegates to ~/utils, which owns the rules so that
+      # Both gates are thin delegates to ~/src/utils, which owns the rules so that
       # one repo's idea of "too long" or "badly named" cannot drift.
       - id: file-length
         name: file length <= 250 lines

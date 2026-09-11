@@ -94,7 +94,7 @@ flutter:
   uses-material-design: true
 
 # Launcher icon generation:
-#   PYTHONPATH=~/testsAndMisc python3 -m python_pkg.app_icons generate --app punchme
+#   PYTHONPATH=~/src/testsAndMisc python3 -m python_pkg.app_icons generate --app punchme
 #   dart run flutter_launcher_icons
 # The charcoal background is AppPalette.ink; the accent is the one shared
 # family accent, so apps are told apart by glyph shape, not colour.
