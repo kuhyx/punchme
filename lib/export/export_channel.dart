@@ -129,7 +129,7 @@ class ExportChannel {
             message: 'this build cannot export a session',
           );
         }
-        return dump();
+        return await dump();
       }
       if (call.method == kRunSyncCheckMethod) {
         final check = syncCheck;
@@ -139,7 +139,7 @@ class ExportChannel {
             message: 'this build has no sync configured',
           );
         }
-        return check();
+        return await check();
       }
       if (call.method == kRunImportMethod) {
         final restored = await importJson(
@@ -156,7 +156,7 @@ class ExportChannel {
           message: 'expected one of: ${ExportFormat.values.map((f) => f.name)}',
         );
       }
-      return renderExport(
+      return await renderExport(
         repository: repository,
         format: format,
         now: now(),

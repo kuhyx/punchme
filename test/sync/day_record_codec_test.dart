@@ -120,9 +120,7 @@ void main() {
 
     test('is null when the check-in is missing or not a string', () {
       expect(
-        recordToDay(
-          const Record(id: '2026-08-25', fields: <String, Field>{}),
-        ),
+        recordToDay(const Record(id: '2026-08-25', fields: <String, Field>{})),
         isNull,
       );
       expect(
@@ -204,10 +202,10 @@ void main() {
         kSettingsRecordId: settingsToRecord(const Settings(), at),
       };
 
-      expect(
-        daysFromLog(log).map((d) => d.dateKey),
-        <String>['2026-08-25', '2026-08-26'],
-      );
+      expect(daysFromLog(log).map((d) => d.dateKey), <String>[
+        '2026-08-25',
+        '2026-08-26',
+      ]);
     });
 
     test('is empty for an empty log', () {
@@ -241,10 +239,7 @@ void main() {
         ),
       };
 
-      expect(
-        settingsFromLog(log).requiredPerDay,
-        const Duration(hours: 8),
-      );
+      expect(settingsFromLog(log).requiredPerDay, const Duration(hours: 8));
     });
   });
 }

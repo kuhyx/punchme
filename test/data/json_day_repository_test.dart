@@ -58,10 +58,11 @@ void main() {
       await repo.saveDay(entry('2026-08-26'));
       await repo.saveDay(entry('2026-08-24'));
       await repo.saveDay(entry('2026-08-25'));
-      expect(
-        (await repo.loadDays()).map((d) => d.dateKey),
-        <String>['2026-08-24', '2026-08-25', '2026-08-26'],
-      );
+      expect((await repo.loadDays()).map((d) => d.dateKey), <String>[
+        '2026-08-24',
+        '2026-08-25',
+        '2026-08-26',
+      ]);
     });
 
     test('an overnight session survives the round trip', () async {
@@ -175,10 +176,9 @@ void main() {
         }),
       );
       // The bad record must not survive to reach the statistics screen.
-      expect(
-        (await repo.loadDays()).map((d) => d.dateKey),
-        <String>['2026-08-26'],
-      );
+      expect((await repo.loadDays()).map((d) => d.dateKey), <String>[
+        '2026-08-26',
+      ]);
     });
 
     test('a non-map settings field falls back to defaults', () async {

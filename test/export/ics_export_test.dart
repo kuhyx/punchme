@@ -28,10 +28,10 @@ void main() {
     });
 
     test('emits one VEVENT per closed day', () {
-      final ics = toIcs(
-        <DayEntry>[closed('2026-08-24'), closed('2026-08-25')],
-        generatedAt: generatedAt,
-      );
+      final ics = toIcs(<DayEntry>[
+        closed('2026-08-24'),
+        closed('2026-08-25'),
+      ], generatedAt: generatedAt);
       expect('BEGIN:VEVENT'.allMatches(ics), hasLength(2));
       expect('END:VEVENT'.allMatches(ics), hasLength(2));
     });
@@ -71,10 +71,9 @@ void main() {
     });
 
     test('no unfolded line exceeds 75 octets', () {
-      final ics = toIcs(
-        <DayEntry>[closed('2026-08-25')],
-        generatedAt: generatedAt,
-      );
+      final ics = toIcs(<DayEntry>[
+        closed('2026-08-25'),
+      ], generatedAt: generatedAt);
       for (final line in ics.split(crlf)) {
         expect(utf8.encode(line).length, lessThanOrEqualTo(75), reason: line);
       }

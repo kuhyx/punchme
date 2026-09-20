@@ -58,9 +58,7 @@ void main() {
       freeDays: const <String>{'2026-12-25'},
     );
     final decoded =
-        json.decode(
-              toJsonExport(days: const <DayEntry>[], settings: settings),
-            )
+        json.decode(toJsonExport(days: const <DayEntry>[], settings: settings))
             as Map<String, dynamic>;
     final restored = Settings.fromJson(
       decoded['settings']! as Map<String, dynamic>,

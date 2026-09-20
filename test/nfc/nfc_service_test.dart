@@ -36,10 +36,7 @@ void main() {
             },
         ndefFrom: (_) => ndef,
       );
-      await service.startReading(
-        onPunch: punches.add,
-        onOther: () => others++,
-      );
+      await service.startReading(onPunch: punches.add, onOther: () => others++);
     }
 
     test('reports a punchme tag', () async {
@@ -116,18 +113,14 @@ void main() {
 
     test('stops the session', () async {
       var stopped = false;
-      await NfcService(
-        stopSession: () async => stopped = true,
-      ).stopReading();
+      await NfcService(stopSession: () async => stopped = true).stopReading();
       expect(stopped, isTrue);
     });
   });
 
   group('writing', () {
     Future<void> write(FakeNdef? ndef) =>
-        NfcService(
-          ndefFrom: (_) => ndef,
-        ).writeTag(
+        NfcService(ndefFrom: (_) => ndef).writeTag(
           discovered: tag,
           tag: const PunchTag(label: 'desk'),
         );
@@ -144,9 +137,7 @@ void main() {
       await expectLater(
         write(null),
         throwsA(
-          predicate<Object>(
-            (e) => failureOf(e) == NfcWriteFailure.notWritable,
-          ),
+          predicate<Object>((e) => failureOf(e) == NfcWriteFailure.notWritable),
         ),
       );
     });
@@ -155,9 +146,7 @@ void main() {
       await expectLater(
         write(FakeNdef(isWritable: false)),
         throwsA(
-          predicate<Object>(
-            (e) => failureOf(e) == NfcWriteFailure.notWritable,
-          ),
+          predicate<Object>((e) => failureOf(e) == NfcWriteFailure.notWritable),
         ),
       );
     });
@@ -175,9 +164,7 @@ void main() {
       await expectLater(
         write(FakeNdef(throwOnWrite: true)),
         throwsA(
-          predicate<Object>(
-            (e) => failureOf(e) == NfcWriteFailure.interrupted,
-          ),
+          predicate<Object>((e) => failureOf(e) == NfcWriteFailure.interrupted),
         ),
       );
     });

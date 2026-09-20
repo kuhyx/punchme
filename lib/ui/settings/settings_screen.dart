@@ -88,9 +88,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// handed, so the last write to land could drop days the UI already shows.
   Future<void> _update(Settings settings) async {
     setState(() => _settings = settings);
-    return _pending = _pending.then(
-      (_) => widget.repository.saveSettings(settings),
-    );
+    _pending = _pending.then((_) => widget.repository.saveSettings(settings));
+    await _pending;
   }
 
   @override
@@ -138,9 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => WriteTagScreen(
-                  service: widget.nfc ?? NfcService(),
-                ),
+                builder: (_) =>
+                    WriteTagScreen(service: widget.nfc ?? NfcService()),
               ),
             ),
           ),

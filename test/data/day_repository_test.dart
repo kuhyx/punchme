@@ -27,10 +27,11 @@ void main() {
       for (final key in <String>['2026-08-26', '2026-08-24', '2026-08-25']) {
         days = upsertDay(days, entry(key));
       }
-      expect(
-        days.map((d) => d.dateKey),
-        <String>['2026-08-24', '2026-08-25', '2026-08-26'],
-      );
+      expect(days.map((d) => d.dateKey), <String>[
+        '2026-08-24',
+        '2026-08-25',
+        '2026-08-26',
+      ]);
     });
 
     test('into an empty list yields just that day', () {

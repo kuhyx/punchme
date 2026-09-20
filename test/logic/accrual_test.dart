@@ -61,10 +61,7 @@ void main() {
     test('a history of only today owes nothing yet', () {
       final balance = computeBalance(
         entries: <DayEntry>[
-          DayEntry(
-            dateKey: '2026-08-25',
-            checkIn: DateTime(2026, 8, 25, 9),
-          ),
+          DayEntry(dateKey: '2026-08-25', checkIn: DateTime(2026, 8, 25, 9)),
         ],
         settings: settings,
         from: DateTime(2026),
@@ -110,9 +107,7 @@ void main() {
 
     test('a still-open today is not counted on either side', () {
       final balance = computeBalance(
-        entries: <DayEntry>[
-          DayEntry(dateKey: '2026-08-25', checkIn: checkIn),
-        ],
+        entries: <DayEntry>[DayEntry(dateKey: '2026-08-25', checkIn: checkIn)],
         settings: settings,
         from: DateTime(2026, 8, 24),
         to: DateTime(2026, 8, 31),

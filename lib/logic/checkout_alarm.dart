@@ -3,22 +3,20 @@ library;
 
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:platform/platform.dart';
+import 'package:platform/testing.dart';
 
 /// Sets a phone alarm for [at], labelled [message].
 ///
 /// Injectable so the widget layer can be tested without a platform channel.
 typedef SetAlarm =
-    Future<void> Function({
-      required DateTime at,
-      required String message,
-    });
+    Future<void> Function({required DateTime at, required String message});
 
 /// The platform the intent believes it is on.
 ///
 /// `AndroidIntent.launch()` silently no-ops off Android, and `flutter test`
 /// runs on the host, so a test must be able to say otherwise. Production
 /// leaves this at the real local platform.
-Platform alarmPlatform = const LocalPlatform();
+Platform alarmPlatform = const Platform();
 
 /// Default [SetAlarm]: opens the system Clock app via `ACTION_SET_ALARM`.
 ///
@@ -42,8 +40,5 @@ Future<void> setCheckOutAlarm({
       'android.intent.extra.alarm.MESSAGE': message,
     },
   );
-  await intent.launch().timeout(
-    const Duration(seconds: 3),
-    onTimeout: () {},
-  );
+  await intent.launch().timeout(const Duration(seconds: 3), onTimeout: () {});
 }

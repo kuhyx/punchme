@@ -89,10 +89,7 @@ void main() {
       // The summary shows its own Undo once the day is sealed, so scope the
       // search to the banner's action rather than counting them globally.
       expect(
-        find.descendant(
-          of: find.byType(SnackBar),
-          matching: find.text('Undo'),
-        ),
+        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
         findsOneWidget,
       );
     });
@@ -111,10 +108,7 @@ void main() {
 
       expect(find.text('Checked IN 09:03 via desk tag'), findsOneWidget);
       expect(
-        find.descendant(
-          of: find.byType(SnackBar),
-          matching: find.text('Undo'),
-        ),
+        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
         findsOneWidget,
       );
     });
@@ -131,10 +125,7 @@ void main() {
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
       await tester.tap(
-        find.descendant(
-          of: find.byType(SnackBar),
-          matching: find.text('Undo'),
-        ),
+        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
       );
       await tester.pumpAndSettle();
 
@@ -155,10 +146,7 @@ void main() {
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
       await tester.tap(
-        find.descendant(
-          of: find.byType(SnackBar),
-          matching: find.text('Undo'),
-        ),
+        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
       );
       await tester.pumpAndSettle();
 

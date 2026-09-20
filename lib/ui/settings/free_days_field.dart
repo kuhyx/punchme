@@ -154,10 +154,7 @@ class _FreeDaysFieldState extends State<FreeDaysField> {
             spacing: AppSpacing.sm,
             children: <Widget>[
               for (final day in sorted)
-                InputChip(
-                  label: Text(day),
-                  onDeleted: () => _toggle(day),
-                ),
+                InputChip(label: Text(day), onDeleted: () => _toggle(day)),
             ],
           ),
       ],

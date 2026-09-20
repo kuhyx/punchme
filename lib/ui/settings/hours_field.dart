@@ -14,11 +14,7 @@ const Duration maxRequiredPerDay = Duration(hours: 24);
 /// Adjusts the hours owed on each working day.
 class HoursField extends StatelessWidget {
   /// Creates a stepper over [value].
-  const HoursField({
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
+  const HoursField({required this.value, required this.onChanged, super.key});
 
   /// The current required duration.
   final Duration value;

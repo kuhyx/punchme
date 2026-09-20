@@ -100,10 +100,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ? const Center(child: Text('No days recorded yet'))
         : ListView.builder(
             itemCount: _days.length,
-            itemBuilder: (context, index) => _DayTile(
-              entry: _days[index],
-              onTap: () => _edit(_days[index]),
-            ),
+            itemBuilder: (context, index) =>
+                _DayTile(entry: _days[index], onTap: () => _edit(_days[index])),
           ),
   );
 }

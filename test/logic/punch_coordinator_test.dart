@@ -160,11 +160,7 @@ void main() {
       final out = DateTime(2026, 8, 25, 23, 59);
       final repo = FakeDayRepository(
         days: <DayEntry>[
-          DayEntry(
-            dateKey: localDateKey(start),
-            checkIn: start,
-            checkOut: out,
-          ),
+          DayEntry(dateKey: localDateKey(start), checkIn: start, checkOut: out),
         ],
       );
       // Two minutes later, which is the next day but inside the window.
@@ -216,10 +212,9 @@ void main() {
 
   test('carries the tag label through', () async {
     final repo = FakeDayRepository();
-    final result = await coordinatorFor(repo).handlePunch(
-      source: PunchSource.nfcForeground,
-      tagLabel: 'desk',
-    );
+    final result = await coordinatorFor(
+      repo,
+    ).handlePunch(source: PunchSource.nfcForeground, tagLabel: 'desk');
     expect(result.tagLabel, 'desk');
   });
 

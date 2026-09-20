@@ -17,7 +17,7 @@ import 'package:punchme/ui/home/home_with_nfc.dart';
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
 // this one-line delegate is unreachable from the suite. Everything it calls
 // (runPunchme, bootstrap, PunchmeApp) is covered.
-Future<void> main() async => runPunchme();
+Future<void> main() async => await runPunchme();
 
 /// How the built widget tree is handed to the engine.
 ///

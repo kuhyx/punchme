@@ -16,11 +16,7 @@ String signedDurationLabel(Duration duration) {
 /// A card showing one period's balance.
 class BalanceCard extends StatelessWidget {
   /// Creates a card labelled [title] for [balance].
-  const BalanceCard({
-    required this.title,
-    required this.balance,
-    super.key,
-  });
+  const BalanceCard({required this.title, required this.balance, super.key});
 
   /// The period's name, e.g. `This week`.
   final String title;

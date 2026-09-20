@@ -89,9 +89,8 @@ Settings recordToSettings(Record record) => Settings.fromJson(
 
 /// Every day in [log], ascending by date key, skipping unreadable records.
 List<DayEntry> daysFromLog(Log log) {
-  final days = <DayEntry>[
-    for (final record in log.values) ?recordToDay(record),
-  ]..sort((a, b) => a.dateKey.compareTo(b.dateKey));
+  final days = <DayEntry>[for (final record in log.values) ?recordToDay(record)]
+    ..sort((a, b) => a.dateKey.compareTo(b.dateKey));
   return days;
 }
 

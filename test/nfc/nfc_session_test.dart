@@ -66,9 +66,7 @@ void main() {
     expect(punches.single, const PunchTag(label: 'desk'));
   });
 
-  testWidgets('stops when backgrounded and restarts on resume', (
-    tester,
-  ) async {
+  testWidgets('stops when backgrounded and restarts on resume', (tester) async {
     await pump(tester);
     expect(starts, 1);
 

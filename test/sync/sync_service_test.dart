@@ -105,14 +105,12 @@ void main() {
     test('does not pull a log this device pushed itself', () async {
       final store = await openFakeStore(nodeId: 'device-a');
       final remote = FakeRemoteStore(<String, String>{
-        'punchme/daily/devices/device-a/log.json': logToJson(
-          <String, Record>{
-            '2026-01-01': dayToRecord(
-              openDay('2026-01-01'),
-              const Hlc(wallTimeMs: 1, counter: 0, nodeId: 'device-a'),
-            ),
-          },
-        ),
+        'punchme/daily/devices/device-a/log.json': logToJson(<String, Record>{
+          '2026-01-01': dayToRecord(
+            openDay('2026-01-01'),
+            const Hlc(wallTimeMs: 1, counter: 0, nodeId: 'device-a'),
+          ),
+        }),
       });
 
       await syncNow(

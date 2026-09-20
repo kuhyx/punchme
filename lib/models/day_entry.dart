@@ -11,11 +11,7 @@ import 'package:punchme/models/local_date.dart';
 @immutable
 class DayEntry {
   /// Creates an entry for [dateKey], started at [checkIn].
-  const DayEntry({
-    required this.dateKey,
-    required this.checkIn,
-    this.checkOut,
-  });
+  const DayEntry({required this.dateKey, required this.checkIn, this.checkOut});
 
   /// Rebuilds an entry from its [json] map.
   ///
@@ -63,11 +59,8 @@ class DayEntry {
   Duration? get worked => checkOut?.difference(checkIn);
 
   /// This entry with [checkOut] set, sealing the day.
-  DayEntry closedAt(DateTime moment) => DayEntry(
-    dateKey: dateKey,
-    checkIn: checkIn,
-    checkOut: moment,
-  );
+  DayEntry closedAt(DateTime moment) =>
+      DayEntry(dateKey: dateKey, checkIn: checkIn, checkOut: moment);
 
   /// This entry with the check-out cleared, reopening the day.
   DayEntry reopened() => DayEntry(dateKey: dateKey, checkIn: checkIn);

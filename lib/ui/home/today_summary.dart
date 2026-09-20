@@ -94,10 +94,7 @@ class TodaySummary extends StatelessWidget {
           ],
         ),
         if (onUndo != null)
-          TextButton(
-            onPressed: onUndo,
-            child: const Text('Undo'),
-          ),
+          TextButton(onPressed: onUndo, child: const Text('Undo')),
       ],
     );
   }

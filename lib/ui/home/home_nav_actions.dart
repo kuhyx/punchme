@@ -32,9 +32,9 @@ class HomeNavActions extends StatelessWidget {
   final Future<void> Function() onReturn;
 
   Future<void> _open(BuildContext context, Widget screen) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => screen),
-    );
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute<void>(builder: (_) => screen));
     await onReturn();
   }
 
@@ -45,18 +45,14 @@ class HomeNavActions extends StatelessWidget {
       IconButton(
         icon: const Icon(Icons.insights_outlined),
         tooltip: 'Statistics',
-        onPressed: () => _open(
-          context,
-          StatsScreen(repository: repository, now: now),
-        ),
+        onPressed: () =>
+            _open(context, StatsScreen(repository: repository, now: now)),
       ),
       IconButton(
         icon: const Icon(Icons.history),
         tooltip: 'History',
-        onPressed: () => _open(
-          context,
-          HistoryScreen(repository: repository, now: now),
-        ),
+        onPressed: () =>
+            _open(context, HistoryScreen(repository: repository, now: now)),
       ),
       IconButton(
         icon: const Icon(Icons.settings_outlined),

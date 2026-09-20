@@ -76,9 +76,7 @@ class JsonDayRepository implements DayRepository {
   Future<void> saveDay(DayEntry entry) async {
     final days = upsertDay(await loadDays(), entry);
     final data = await _read();
-    data['days'] = <Map<String, dynamic>>[
-      for (final day in days) day.toJson(),
-    ];
+    data['days'] = <Map<String, dynamic>>[for (final day in days) day.toJson()];
     await _write(data);
   }
 

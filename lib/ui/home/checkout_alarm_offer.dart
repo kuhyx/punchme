@@ -92,7 +92,7 @@ Future<TargetToday?> loadAndOfferCheckOutAlarm({
   if (!context.mounted) {
     return null;
   }
-  return offerCheckOutAlarm(
+  return await offerCheckOutAlarm(
     context: context,
     beforeDialog: beforeDialog,
     checkIn: checkIn,

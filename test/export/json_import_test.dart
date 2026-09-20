@@ -99,10 +99,8 @@ void main() {
 
   test('rejects a day entry that is not an object', () {
     expect(
-      () => importJson(
-        repository: FakeDayRepository(),
-        source: '{"days":[42]}',
-      ),
+      () =>
+          importJson(repository: FakeDayRepository(), source: '{"days":[42]}'),
       throwsA(isA<FormatException>()),
     );
   });

@@ -31,7 +31,7 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.3.1
+      ref: crdt_sync_flutter-v0.3.2
       path: crdt_sync_flutter
 
   # Owns the frozen palette and the theme builders. There is deliberately no
@@ -48,7 +48,7 @@ dependencies:
   # Direct, not transitive: the session dump names FlutterSecureStorage in
   # the seam it exposes so a test can stand in for the keystore, which
   # `depend_on_referenced_packages` requires be an explicit dependency.
-  flutter_secure_storage: 11.0.0
+  flutter_secure_storage: 11.2.0
 
   # Direct, not transitive: the connect tile drives the account picker
   # through GoogleSignInPlatform rather than the GoogleSignIn facade. The
@@ -75,7 +75,7 @@ dependencies:
 
   # Direct, not transitive: checkout_alarm.dart injects a Platform so the
   # SET_ALARM intent can be exercised off-Android in tests.
-  platform: 3.1.6
+  platform: 3.2.0
   share_plus: 13.3.0
 
 dev_dependencies:
@@ -88,7 +88,7 @@ dev_dependencies:
 
   # Stricter than flutter_lints, and standard across this ecosystem's Flutter
   # apps. Enables public_member_api_docs, among much else.
-  very_good_analysis: ^10.3.0
+  very_good_analysis: ^11.0.0
 
 flutter:
   uses-material-design: true

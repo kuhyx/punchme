@@ -48,10 +48,7 @@ class CheckOutAlarmDialog extends StatelessWidget {
           Text(
             'Work ${durationLabel(target.share)} today, '
             'until ${clockLabel(target.checkOutAt)}.',
-            style: TextStyle(
-              color: theme.colorScheme.onSurface,
-              fontSize: 18,
-            ),
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18),
           ),
           const SizedBox(height: 8),
           Text(

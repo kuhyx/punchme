@@ -94,10 +94,7 @@ void main() {
     });
 
     test('reports an unknown format as a platform error', () async {
-      ExportChannel(
-        repository: FakeDayRepository(),
-        channel: channel,
-      ).listen();
+      ExportChannel(repository: FakeDayRepository(), channel: channel).listen();
 
       final reply = await messenger.handlePlatformMessage(
         kExportChannelName,
@@ -113,10 +110,7 @@ void main() {
     });
 
     test('ignores a method it does not know', () async {
-      ExportChannel(
-        repository: FakeDayRepository(),
-        channel: channel,
-      ).listen();
+      ExportChannel(repository: FakeDayRepository(), channel: channel).listen();
 
       final reply = await messenger.handlePlatformMessage(
         kExportChannelName,
@@ -151,10 +145,7 @@ void main() {
     });
 
     test('reports a malformed import as an error', () async {
-      ExportChannel(
-        repository: FakeDayRepository(),
-        channel: channel,
-      ).listen();
+      ExportChannel(repository: FakeDayRepository(), channel: channel).listen();
 
       final reply = await messenger.handlePlatformMessage(
         kExportChannelName,

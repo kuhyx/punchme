@@ -131,9 +131,9 @@ void main() {
 
   test('does not run when the log already holds only settings', () async {
     final store = await openFakeStore();
-    await CrdtDayRepository(store: store).saveSettings(
-      const Settings(requiredPerDay: Duration(hours: 6)),
-    );
+    await CrdtDayRepository(
+      store: store,
+    ).saveSettings(const Settings(requiredPerDay: Duration(hours: 6)));
 
     final outcome = await migrateIntoLog(
       source: FakeDayRepository(days: <DayEntry>[day('2026-08-25')]),

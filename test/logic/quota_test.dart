@@ -68,10 +68,7 @@ void main() {
     test('a full Mon-Fri week quotes 40h from Monday morning', () {
       final balance = computeBalance(
         entries: <DayEntry>[
-          DayEntry(
-            dateKey: '2026-08-24',
-            checkIn: DateTime(2026, 8, 24, 9),
-          ),
+          DayEntry(dateKey: '2026-08-24', checkIn: DateTime(2026, 8, 24, 9)),
         ],
         settings: settings,
         from: DateTime(2026, 8, 24),
@@ -89,10 +86,7 @@ void main() {
       );
       final balance = computeBalance(
         entries: <DayEntry>[
-          DayEntry(
-            dateKey: '2026-08-24',
-            checkIn: DateTime(2026, 8, 24, 9),
-          ),
+          DayEntry(dateKey: '2026-08-24', checkIn: DateTime(2026, 8, 24, 9)),
         ],
         settings: withLeave,
         from: DateTime(2026, 8, 24),

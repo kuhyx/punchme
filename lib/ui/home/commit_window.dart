@@ -89,11 +89,7 @@ mixin CommitWindow<T extends StatefulWidget> on State<T> {
       _warnedUnknownVersion = true;
       warnUnknownTagVersion();
     }
-    arm(
-      source: PunchSource.nfcForeground,
-      at: nowValue(),
-      tagLabel: tag.label,
-    );
+    arm(source: PunchSource.nfcForeground, at: nowValue(), tagLabel: tag.label);
   }
 
   bool _warnedUnknownVersion = false;

@@ -58,10 +58,10 @@ void main() {
       await repository.saveDay(openDay('2026-08-26'));
       await repository.saveDay(openDay('2026-08-25'));
 
-      expect(
-        (await repository.loadDays()).map((d) => d.dateKey),
-        <String>['2026-08-25', '2026-08-26'],
-      );
+      expect((await repository.loadDays()).map((d) => d.dateKey), <String>[
+        '2026-08-25',
+        '2026-08-26',
+      ]);
     },
   );
 
@@ -139,9 +139,9 @@ void main() {
     test('Undo still clears a check-out this device knows about', () async {
       final store = await openFakeStore();
       final repository = CrdtDayRepository(store: store);
-      final closed = openDay('2026-08-25').closedAt(
-        DateTime(2026, 8, 25, 18, 52),
-      );
+      final closed = openDay(
+        '2026-08-25',
+      ).closedAt(DateTime(2026, 8, 25, 18, 52));
       await repository.saveDay(closed);
 
       // What `undoPunch` does for a sealed day.
@@ -150,10 +150,7 @@ void main() {
       expect((await repository.loadDays()).single.checkOut, isNull);
       // Explicitly stamped null, so the reopen beats the earlier close on a
       // peer too rather than silently losing to it.
-      expect(
-        store.get('2026-08-25')!.fields[kCheckOutField]!.$1,
-        isNull,
-      );
+      expect(store.get('2026-08-25')!.fields[kCheckOutField]!.$1, isNull);
     });
   });
 
