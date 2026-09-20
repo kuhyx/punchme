@@ -22,6 +22,7 @@ class HomeWithNfc extends StatefulWidget {
     required this.repository,
     this.service,
     this.channel,
+    this.now = DateTime.now,
     super.key,
   });
 
@@ -33,6 +34,9 @@ class HomeWithNfc extends StatefulWidget {
 
   /// Carries taps from outside the app. Defaults to the real channel.
   final BackgroundPunchChannel? channel;
+
+  /// The clock, injectable so tests can pin a working day.
+  final DateTime Function() now;
 
   @override
   State<HomeWithNfc> createState() => _HomeWithNfcState();
@@ -94,6 +98,7 @@ class _HomeWithNfcState extends State<HomeWithNfc> with WidgetsBindingObserver {
     onBlankTag: _onBlankTag,
     child: HomeScreen(
       repository: widget.repository,
+      now: widget.now,
       onReady: (handlers) => _handlers = handlers,
     ),
   );

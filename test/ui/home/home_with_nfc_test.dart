@@ -26,7 +26,13 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: HomeWithNfc(repository: repo, service: service),
+        home: HomeWithNfc(
+          repository: repo,
+          service: service,
+          // A Tuesday: the alarm offer is only made on a working day, so the
+          // real clock made this test fail every weekend (2026-09-20).
+          now: () => DateTime(2026, 8, 25, 9, 3, 12),
+        ),
       ),
     );
     await tester.pumpAndSettle();
