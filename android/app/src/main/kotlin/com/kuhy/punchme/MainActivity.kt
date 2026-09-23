@@ -18,6 +18,7 @@ private const val CHANNEL = "kuhy.punchme/nfc"
  */
 class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
+    private val wifiChannel = WifiChannel(this) { requestWifiPermissions(this) }
 
     /** The cold-start payload, held until Dart asks for it. */
     private var launchPayload: String? = null
@@ -31,6 +32,7 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        wifiChannel.attach(flutterEngine)
         channel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             CHANNEL,
@@ -70,6 +72,16 @@ class MainActivity : FlutterActivity() {
     override fun onDestroy() {
         channel?.setMethodCallHandler(null)
         channel = null
+        wifiChannel.detach()
         super.onDestroy()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onWifiPermissionResult(this, requestCode)
     }
 }

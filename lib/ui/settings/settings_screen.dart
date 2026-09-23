@@ -14,7 +14,10 @@ import 'package:punchme/ui/settings/free_days_field.dart';
 import 'package:punchme/ui/settings/hours_field.dart';
 import 'package:punchme/ui/settings/sync_actions.dart';
 import 'package:punchme/ui/settings/weekday_picker.dart';
+import 'package:punchme/ui/settings/wifi_ssids_field.dart';
+import 'package:punchme/ui/settings/wifi_status_card.dart';
 import 'package:punchme/ui/settings/write_tag_screen.dart';
+import 'package:punchme/wifi/wifi_channel.dart';
 
 /// Edits the work expectations and offers the three exports.
 class SettingsScreen extends StatefulWidget {
@@ -26,6 +29,8 @@ class SettingsScreen extends StatefulWidget {
     this.nfc,
     this.syncProbe,
     this.syncConnect,
+    this.currentSsid = currentWifiSsid,
+    this.armWifi = setWifiArmed,
     super.key,
   });
 
@@ -52,6 +57,12 @@ class SettingsScreen extends StatefulWidget {
 
   /// Runs the interactive Google sign-in. Null means "use the real one".
   final SyncConnect? syncConnect;
+
+  /// Asks native for the currently connected Wi-Fi SSID. Injected for tests.
+  final Future<String?> Function() currentSsid;
+
+  /// Tells native whether any work SSID is configured. Injected for tests.
+  final Future<void> Function({required bool armed}) armWifi;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -87,6 +98,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// document. Overlapping calls would each persist the snapshot they were
   /// handed, so the last write to land could drop days the UI already shows.
   Future<void> _update(Settings settings) async {
+    final armed = settings.workWifiSsids.isNotEmpty;
+    // Armed before the rebuild below, not after: the status card reads
+    // native's arm state the moment `armed` flips in its widget, and native
+    // has to already know by then or that first read reports stale "not
+    // running" until something else happens to rebuild the card.
+    if (armed != _settings.workWifiSsids.isNotEmpty) {
+      await widget.armWifi(armed: armed);
+    }
     setState(() => _settings = settings);
     _pending = _pending.then((_) => widget.repository.saveSettings(settings));
     await _pending;
@@ -126,6 +145,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             now: widget.now,
             onChanged: (value) => _update(_settings.copyWith(freeDays: value)),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          const SectionHeader('Work Wi-Fi'),
+          WifiSsidsField(
+            ssids: _settings.workWifiSsids,
+            currentSsid: widget.currentSsid,
+            onChanged: (value) =>
+                _update(_settings.copyWith(workWifiSsids: value)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          WifiStatusCard(armed: _settings.workWifiSsids.isNotEmpty),
           const SizedBox(height: AppSpacing.lg),
           const SectionHeader('Clock tag'),
           ListTile(

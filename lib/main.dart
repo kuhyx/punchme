@@ -7,12 +7,15 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/export_channel.dart';
+import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
 import 'package:punchme/sync/session_dump.dart';
 import 'package:punchme/sync/sync_bootstrap.dart';
 import 'package:punchme/sync/sync_check.dart';
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
+import 'package:punchme/wifi/wifi_channel.dart';
+import 'package:punchme/wifi/wifi_observation_store.dart';
 
 // coverage:ignore-line — flutter_test never invokes a Dart entry point, so
 // this one-line delegate is unreachable from the suite. Everything it calls
@@ -58,6 +61,13 @@ Future<Widget> bootstrap() async {
     // Hands over the shared kuhy-syncs credential, at the owner's explicit
     // request. See session_dump.dart for what that token actually covers.
     sessionDump: dumpSession,
+  ).listen();
+  // Answers Wi-Fi observations the same way: registered on the shared entry
+  // point so a report lands whether this engine is the UI one or the
+  // short-lived one the foreground service or periodic worker spins up.
+  WifiChannel(
+    coordinator: PunchCoordinator(repository: repository),
+    observations: await WifiObservationStore.open(),
   ).listen();
   return PunchmeApp(repository: repository);
 }

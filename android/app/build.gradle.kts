@@ -100,6 +100,14 @@ android {
     }
 }
 
+dependencies {
+    // The periodic backstop for auto-punch via work Wi-Fi (WifiCheckWorker):
+    // guarantees the check re-runs roughly every 15 minutes and survives
+    // both the process being killed and a reboot, with no boot receiver of
+    // its own. Pinned to the newest stable release.
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

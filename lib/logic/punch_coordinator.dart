@@ -16,6 +16,9 @@ enum PunchSource {
 
   /// A tag tapped while the app was backgrounded or closed.
   nfcBackground,
+
+  /// The phone was seen on a configured work Wi-Fi network.
+  wifiAuto,
 }
 
 /// How close two NFC punches may be before the second is treated as a slip.

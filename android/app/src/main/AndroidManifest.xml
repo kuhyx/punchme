@@ -15,6 +15,24 @@
         android:name="android.hardware.nfc"
         android:required="false"/>
 
+    <!-- Auto-punch via work Wi-Fi. ACCESS_FINE_LOCATION is what reading the
+         connected SSID is gated on at every API level this app supports;
+         ACCESS_BACKGROUND_LOCATION is the separate runtime prompt Android 10+
+         requires for reading it from the periodic worker, which does not run
+         as a visible foreground service the way the instant watcher does. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- The foreground service's own persistent "watching for work Wi-Fi"
+         notification, required to post it on API 33+. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- Restarts the watcher service after a reboot; WorkManager reschedules
+         its own periodic backstop without this. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:label="punchme"
         android:name="${applicationName}"
@@ -56,6 +74,22 @@
              shell UID and could not satisfy a signature permission. What
              limits it instead is that the receiver always writes inside the
              app's own external dir, which other apps cannot read. -->
+        <!-- The instant half of auto-punch via work Wi-Fi. A foreground
+             service, so its own "watching for work Wi-Fi" notification is
+             the honest, unavoidable cost of near-instant detection; see
+             WifiObserverService.kt. -->
+        <service
+            android:name=".WifiObserverService"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+        <!-- Restarts the watcher above after a reboot, if it was armed. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
         <receiver
             android:name=".ExportReceiver"
             android:exported="true">
