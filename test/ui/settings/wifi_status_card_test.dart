@@ -96,9 +96,14 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(home: WifiStatusCard(armed: true)),
       );
-      await tester.pump();
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      await tester.pump();
+      // Real I/O, so real time: poll rather than sleep a fixed 50ms, which
+      // lost the race under a CPU-capped, parallel test run.
+      final deadline = DateTime.now().add(const Duration(seconds: 5));
+      while (find.text('Not seen on a work network yet').evaluate().isEmpty &&
+          DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await tester.pump();
+      }
     });
 
     expect(find.text('Not seen on a work network yet'), findsOneWidget);

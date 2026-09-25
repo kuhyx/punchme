@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:punchme/logic/target_time.dart';
+import 'package:punchme/logic/working_days_left.dart';
 import 'package:punchme/models/settings.dart';
 
 void main() {

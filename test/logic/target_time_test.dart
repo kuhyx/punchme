@@ -81,7 +81,7 @@ void main() {
     });
   });
 
-  group('never shorter than the required day', () {
+  group('a plain day when nothing is owed or banked', () {
     test('a plain week gives a plain day', () {
       final target = targetForToday(
         entries: const <DayEntry>[],
@@ -92,16 +92,6 @@ void main() {
       expect(target.deficit, Duration.zero);
       expect(target.share, const Duration(hours: 8));
       expect(target.checkOutAt, DateTime(2026, 9, 14, 17));
-    });
-
-    test('being ahead does not buy a short day', () {
-      final target = targetForToday(
-        entries: <DayEntry>[logged('2026-09-14', const Duration(hours: 9))],
-        settings: settings,
-        checkIn: tuesday9am,
-      )!;
-      expect(target.level, DeficitLevel.none);
-      expect(target.share, const Duration(hours: 8));
     });
 
     test("today's own open session is not a shortfall", () {

@@ -2,17 +2,19 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:punchme/logic/surplus.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
 /// Explains where today's [target] comes from, in one sentence.
 ///
-/// Names the red card being repaid and how the shortfall is split, so the
-/// number in the dialog can be checked against the statistics screen.
+/// Names the red card being repaid and how the shortfall is split -- or, when
+/// all are green, the card that limits the surplus and how it is spread -- so
+/// the number in the dialog can be checked against the statistics screen.
 String targetReason(TargetToday target) {
   final behind = durationLabel(target.deficit);
   final reason = switch (target.level) {
-    DeficitLevel.none => 'On track, nothing to make up.',
+    DeficitLevel.none => _aheadReason(target),
     DeficitLevel.week => '$behind behind this week — all today.',
     DeficitLevel.month =>
       '$behind behind this month — ${_spread(target.spreadOver)}.',
@@ -27,6 +29,20 @@ String targetReason(TargetToday target) {
 }
 
 String _spread(int days) => days == 1 ? 'all today' : 'spread over $days days';
+
+String _aheadReason(TargetToday target) {
+  final tightest = target.tightest;
+  if (tightest == null) {
+    return 'On track, nothing to make up.';
+  }
+  final reason =
+      '${durationLabel(target.surplus)} ahead (tightest: ${tightest.name}) — '
+      '${_spread(target.spreadOver)}.';
+  if (!target.surplusCapped) {
+    return reason;
+  }
+  return '$reason Capped at ${durationLabel(maxSurplusSlice)} off a day.';
+}
 
 /// Asks whether to set a phone alarm for the target check-out time.
 class CheckOutAlarmDialog extends StatelessWidget {

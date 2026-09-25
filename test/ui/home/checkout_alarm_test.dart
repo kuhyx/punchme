@@ -151,25 +151,28 @@ void main() {
     });
   });
 
-  testWidgets('a banked week still proposes a plain day', (tester) async {
-    // Being ahead never shortens a day: the required 8h stands.
-    final big = DayEntry(
+  testWidgets('a banked week shortens the day', (tester) async {
+    // Tuesday 1h over: every card is +1h, spread over Wed-Thu => 30m off.
+    final ahead = DayEntry(
       dateKey: '2026-08-25',
-      checkIn: DateTime(2026, 8, 25, 6),
-      checkOut: DateTime(2026, 8, 26, 6), // 24h in one go
+      checkIn: DateTime(2026, 8, 25, 9),
+      checkOut: DateTime(2026, 8, 25, 18),
     );
     await pump(
       tester,
-      FakeDayRepository(days: <DayEntry>[big], settings: settings),
+      FakeDayRepository(days: <DayEntry>[ahead], settings: settings),
     );
     await checkIn(tester);
 
     expect(find.text('Checked in'), findsOneWidget);
     expect(
-      find.textContaining('Work 8h 00m today, until 17:00.'),
+      find.textContaining('Work 7h 30m today, until 16:30.'),
       findsOneWidget,
     );
-    expect(find.text('On track, nothing to make up.'), findsOneWidget);
+    expect(
+      find.text('1h 00m ahead (tightest: week) — spread over 2 days.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a plain Mon-Fri week proposes a plain 8h day', (tester) async {

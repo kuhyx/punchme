@@ -3,6 +3,8 @@ library;
 
 import 'package:punchme/logic/balance.dart';
 import 'package:punchme/logic/periods.dart';
+import 'package:punchme/logic/surplus.dart';
+import 'package:punchme/logic/working_days_left.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
 import 'package:punchme/models/settings.dart';
@@ -36,11 +38,15 @@ class TargetToday {
     required this.deficit,
     required this.spreadOver,
     required this.uncovered,
+    this.surplus = Duration.zero,
+    this.tightest,
+    this.surplusSpread,
+    this.surplusCapped = false,
   });
 
   /// How long to work today: the required day plus today's slice of the
-  /// deficit at [level]. Never shorter than the required day — being ahead
-  /// does not buy a short day, only being behind buys a long one.
+  /// deficit at [level] or, when every card is green, minus today's slice of
+  /// the [surplus]. Never negative.
   final Duration share;
 
   /// The clock time that [share] works out to, given today's check-in.
@@ -52,8 +58,22 @@ class TargetToday {
   /// How far behind the [level] card is (positive), zero when on track.
   final Duration deficit;
 
-  /// Working days the deficit is split across, today included.
+  /// Working days the deficit or surplus is split across, today included.
   final int spreadOver;
+
+  /// How far ahead the least-ahead card is: the most today can be shortened
+  /// by without turning any card red. Zero whenever [level] is not
+  /// [DeficitLevel.none].
+  final Duration surplus;
+
+  /// The card that set [surplus], or null when there is no surplus.
+  final Horizon? tightest;
+
+  /// The stretch [surplus] is spread over, or null when there is none.
+  final Horizon? surplusSpread;
+
+  /// Whether today's cut hit [maxSurplusSlice] even spread over the year.
+  final bool surplusCapped;
 
   /// The part of today's slice that the midnight cap cut off.
   ///
@@ -67,47 +87,21 @@ class TargetToday {
   bool get isCapped => uncovered > Duration.zero;
 }
 
-/// Counts working days from [now]'s date up to (excluding) [until].
-///
-/// Today counts when it is a working day, because the point of the split is
-/// to decide how long *today* should be.
-int workingDaysLeft({
-  required DateTime now,
-  required DateTime until,
-  required Settings settings,
-}) {
-  var count = 0;
-  var cursor = DateTime(now.year, now.month, now.day);
-  while (cursor.isBefore(until)) {
-    if (isWorkingDay(localDateKey(cursor), settings)) {
-      count++;
-    }
-    cursor = nextDay(cursor);
-  }
-  return count;
-}
-
-/// Working days from [now]'s date to the end of its week, today included.
-int workingDaysLeftInWeek({
-  required DateTime now,
-  required Settings settings,
-}) => workingDaysLeft(now: now, until: endOfWeek(now), settings: settings);
-
-/// Working days from [now]'s date to the end of its month, today included.
-int workingDaysLeftInMonth({
-  required DateTime now,
-  required Settings settings,
-}) => workingDaysLeft(now: now, until: endOfMonth(now), settings: settings);
-
 /// Works out how long today should be, given a check-in at [checkIn].
 ///
 /// Starts from the required day and adds a slice of the first red statistics
 /// card, in the same numbers the cards themselves show (today's open session
 /// excluded): the week's shortfall lands on today in full, the month's is
 /// spread over the working days left in the week, the year's over the working
-/// days left in the month. Rounds to the nearest whole minute and caps the
-/// check-out at 23:59 of the check-in day. Returns null when today is not a
-/// working day — there is no meaningful target to show.
+/// days left in the month. Rounds to the nearest whole minute.
+///
+/// When every card is green, today is shortened instead, by a slice of the
+/// smallest surplus (so the tightest card is spent down to zero and none goes
+/// red): spread over the week's days left, or the month's, or the year's --
+/// the first that keeps the cut within [maxSurplusSlice].
+///
+/// Caps the check-out at 23:59 of the check-in day. Returns null when today
+/// is not a working day — there is no meaningful target to show.
 TargetToday? targetForToday({
   required Iterable<DayEntry> entries,
   required Settings settings,
@@ -116,23 +110,28 @@ TargetToday? targetForToday({
   if (!isWorkingDay(localDateKey(checkIn), settings)) {
     return null;
   }
-  Duration behind(DateTime from, DateTime to) {
-    final difference = computeBalance(
-      entries: entries,
-      settings: settings,
-      from: from,
-      to: to,
-      now: checkIn,
-    ).difference;
-    return difference.isNegative ? -difference : Duration.zero;
-  }
+  // Positive when ahead, negative when behind.
+  Duration difference(DateTime from, DateTime to) => computeBalance(
+    entries: entries,
+    settings: settings,
+    from: from,
+    to: to,
+    now: checkIn,
+  ).difference;
+  Duration behind(Duration difference) =>
+      difference.isNegative ? -difference : Duration.zero;
 
   var level = DeficitLevel.none;
   var deficit = Duration.zero;
   var spreadOver = 1;
-  final week = behind(startOfWeek(checkIn), endOfWeek(checkIn));
-  final month = behind(startOfMonth(checkIn), endOfMonth(checkIn));
-  final year = behind(startOfYear(checkIn), endOfYear(checkIn));
+  final differences = <Horizon, Duration>{
+    Horizon.week: difference(startOfWeek(checkIn), endOfWeek(checkIn)),
+    Horizon.month: difference(startOfMonth(checkIn), endOfMonth(checkIn)),
+    Horizon.year: difference(startOfYear(checkIn), endOfYear(checkIn)),
+  };
+  final week = behind(differences[Horizon.week]!);
+  final month = behind(differences[Horizon.month]!);
+  final year = behind(differences[Horizon.year]!);
   if (week > Duration.zero) {
     level = DeficitLevel.week;
     deficit = week;
@@ -149,8 +148,37 @@ TargetToday? targetForToday({
   // Round to the nearest minute rather than truncating, so several days of an
   // odd remainder do not quietly lose a minute each.
   final sliceSeconds = deficit.inSeconds / spreadOver;
-  final slice = Duration(minutes: (sliceSeconds / 60).round());
+  var slice = Duration(minutes: (sliceSeconds / 60).round());
+
+  var surplus = Duration.zero;
+  Horizon? tightest;
+  Horizon? surplusSpread;
+  var surplusCapped = false;
+  if (level == DeficitLevel.none) {
+    // All green here, so every difference is >= 0 and the smallest is how
+    // much can come off before the first card turns red.
+    final least = differences.entries.reduce(
+      (a, b) => b.value < a.value ? b : a,
+    );
+    if (least.value > Duration.zero) {
+      surplus = least.value;
+      tightest = least.key;
+      final cut = surplusSlice(
+        surplus: surplus,
+        now: checkIn,
+        settings: settings,
+      );
+      slice = -cut.slice;
+      surplusSpread = cut.spread;
+      spreadOver = cut.days;
+      surplusCapped = cut.capped;
+    }
+  }
+
   var share = settings.requiredPerDay + slice;
+  if (share.isNegative) {
+    share = Duration.zero;
+  }
   var checkOutAt = checkIn.add(share);
   var uncovered = Duration.zero;
   final lastMinute = DateTime(checkIn.year, checkIn.month, checkIn.day, 23, 59);
@@ -167,5 +195,9 @@ TargetToday? targetForToday({
     deficit: deficit,
     spreadOver: spreadOver,
     uncovered: uncovered,
+    surplus: surplus,
+    tightest: tightest,
+    surplusSpread: surplusSpread,
+    surplusCapped: surplusCapped,
   );
 }
