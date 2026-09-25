@@ -75,9 +75,10 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      await tester.pump();
+      await _pumpUntil(
+        tester,
+        find.text('Last seen at work: 2026-08-25 17:05'),
+      );
     });
 
     expect(find.text('Last seen at work: 2026-08-25 17:05'), findsOneWidget);
@@ -96,14 +97,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(home: WifiStatusCard(armed: true)),
       );
-      // Real I/O, so real time: poll rather than sleep a fixed 50ms, which
-      // lost the race under a CPU-capped, parallel test run.
-      final deadline = DateTime.now().add(const Duration(seconds: 5));
-      while (find.text('Not seen on a work network yet').evaluate().isEmpty &&
-          DateTime.now().isBefore(deadline)) {
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        await tester.pump();
-      }
+      await _pumpUntil(tester, find.text('Not seen on a work network yet'));
     });
 
     expect(find.text('Not seen on a work network yet'), findsOneWidget);
@@ -156,4 +150,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Add a network above to turn this on.'), findsOneWidget);
   });
+}
+
+/// Pumps inside `runAsync` until [finder] matches, for up to five seconds.
+///
+/// Real file I/O and channel calls take real time, so this polls rather than
+/// sleeping a fixed 50ms -- which lost the race under a CPU-capped, parallel
+/// test run and made the gate flaky.
+Future<void> _pumpUntil(WidgetTester tester, Finder finder) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 5));
+  await tester.pump();
+  while (finder.evaluate().isEmpty && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await tester.pump();
+  }
 }
