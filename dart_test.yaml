@@ -1,0 +1,6 @@
+# Two test isolates at a time. `flutter test` defaults to one per core, which
+# on a 24-core desktop plus --coverage overruns a 2 GiB memory cap and the
+# runner SIGTERMs every shell (measured 2026-09-25: -j 4 killed, -j 2 passes
+# in ~41s, -j 1 in ~72s). CI overrides this with `-j "$(nproc)"`: the runner
+# has the memory, so it gets every core.
+concurrency: 2

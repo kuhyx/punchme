@@ -24,7 +24,9 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze --fatal-infos --fatal-warnings
       - run: dart format --set-exit-if-changed lib/ test/
-      - run: flutter test --coverage
+      # dart_test.yaml holds local runs to 2 isolates to fit a memory cap; the
+      # runner has the RAM, so -j (which overrides the file) uses every core.
+      - run: flutter test --coverage -j "$(nproc)"
       # Both coverage gates, delegated to the same script the pre-push mirror
       # runs. Reimplementing the LF/LH sum here is how CI and the local gate
       # drift -- and this one has to know which lines are marked
