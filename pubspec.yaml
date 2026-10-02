@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.1+1
+version: 1.0.2+1
 
 environment:
   sdk: ^3.12.2
@@ -76,7 +76,7 @@ dependencies:
   # Direct, not transitive: checkout_alarm.dart injects a Platform so the
   # SET_ALARM intent can be exercised off-Android in tests.
   platform: 3.2.0
-  share_plus: 13.3.0
+  share_plus: 13.3.1
 
 dev_dependencies:
   # Generates the Android launcher icons from assets/icon/ -- source art comes
