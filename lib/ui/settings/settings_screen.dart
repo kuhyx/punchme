@@ -9,6 +9,7 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/share_target.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/nfc/nfc_service.dart';
+import 'package:punchme/ui/settings/counted_horizons_field.dart';
 import 'package:punchme/ui/settings/export_actions.dart';
 import 'package:punchme/ui/settings/free_days_field.dart';
 import 'package:punchme/ui/settings/hours_field.dart';
@@ -158,6 +159,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             workingWeekdays: _settings.workingWeekdays,
             now: widget.now,
             onChanged: (value) => _update(_settings.copyWith(freeDays: value)),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const SectionHeader('What counts'),
+          CountedHorizonsField(
+            counted: _settings.countedHorizons,
+            onChanged: (value) =>
+                _update(_settings.copyWith(countedHorizons: value)),
           ),
           const SizedBox(height: AppSpacing.lg),
           const SectionHeader('Clock tag'),

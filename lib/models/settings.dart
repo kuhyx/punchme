@@ -1,6 +1,8 @@
 /// User-configurable work expectations.
 library;
 
+import 'package:punchme/models/horizon.dart';
+
 /// How much work is expected, and on which days.
 class Settings {
   /// Creates settings; defaults are a conventional 8h Mon-Fri.
@@ -9,6 +11,7 @@ class Settings {
     this.workingWeekdays = defaultWorkingWeekdays,
     this.freeDays = const <String>{},
     this.workWifiSsids = const <String>{},
+    this.countedHorizons = allHorizons,
   });
 
   /// Rebuilds settings from a [json] map, falling back to defaults per field.
@@ -20,6 +23,7 @@ class Settings {
     final weekdays = json['workingWeekdays'];
     final free = json['freeDays'];
     final wifi = json['workWifiSsids'];
+    final counted = json['countedHorizons'];
     return Settings(
       requiredPerDay: minutes is int
           ? Duration(minutes: minutes)
@@ -33,6 +37,12 @@ class Settings {
       workWifiSsids: wifi is List
           ? wifi.whereType<String>().toSet()
           : const <String>{},
+      countedHorizons: counted is List
+          ? <Horizon>{
+              for (final name in counted.whereType<String>())
+                ?Horizon.values.asNameMap()[name],
+            }
+          : allHorizons,
     );
   }
 
@@ -43,6 +53,13 @@ class Settings {
     DateTime.wednesday,
     DateTime.thursday,
     DateTime.friday,
+  };
+
+  /// Every card counts: the behaviour before the option existed.
+  static const Set<Horizon> allHorizons = <Horizon>{
+    Horizon.week,
+    Horizon.month,
+    Horizon.year,
   };
 
   /// Hours owed on each working day.
@@ -66,17 +83,25 @@ class Settings {
   /// sync with this.
   final Set<String> workWifiSsids;
 
+  /// The statistics cards that steer today's target.
+  ///
+  /// A card left out is info only: it still shows its balance, but neither
+  /// its deficit lengthens today nor its surplus shortens it.
+  final Set<Horizon> countedHorizons;
+
   /// This settings object with the given fields replaced.
   Settings copyWith({
     Duration? requiredPerDay,
     Set<int>? workingWeekdays,
     Set<String>? freeDays,
     Set<String>? workWifiSsids,
+    Set<Horizon>? countedHorizons,
   }) => Settings(
     requiredPerDay: requiredPerDay ?? this.requiredPerDay,
     workingWeekdays: workingWeekdays ?? this.workingWeekdays,
     freeDays: freeDays ?? this.freeDays,
     workWifiSsids: workWifiSsids ?? this.workWifiSsids,
+    countedHorizons: countedHorizons ?? this.countedHorizons,
   );
 
   /// These settings as a JSON-encodable map.
@@ -86,5 +111,9 @@ class Settings {
     'workingWeekdays': workingWeekdays.toList()..sort(),
     'freeDays': freeDays.toList()..sort(),
     'workWifiSsids': workWifiSsids.toList()..sort(),
+    'countedHorizons': <String>[
+      for (final horizon in Horizon.values)
+        if (countedHorizons.contains(horizon)) horizon.name,
+    ],
   };
 }

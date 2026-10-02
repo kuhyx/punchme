@@ -9,6 +9,7 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/logic/balance.dart';
 import 'package:punchme/logic/periods.dart';
 import 'package:punchme/models/day_entry.dart';
+import 'package:punchme/models/horizon.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/ui/stats/balance_card.dart';
 
@@ -75,18 +76,21 @@ class _StatsScreenState extends State<StatsScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         children: <Widget>[
           BalanceCard(
-            title: 'This week',
+            title: Horizon.week.title,
             balance: _balanceFor(startOfWeek(now), endOfWeek(now)),
+            infoOnly: !_settings.countedHorizons.contains(Horizon.week),
           ),
           const SizedBox(height: AppSpacing.md),
           BalanceCard(
-            title: 'This month',
+            title: Horizon.month.title,
             balance: _balanceFor(startOfMonth(now), endOfMonth(now)),
+            infoOnly: !_settings.countedHorizons.contains(Horizon.month),
           ),
           const SizedBox(height: AppSpacing.md),
           BalanceCard(
-            title: 'This year',
+            title: Horizon.year.title,
             balance: _balanceFor(startOfYear(now), endOfYear(now)),
+            infoOnly: !_settings.countedHorizons.contains(Horizon.year),
           ),
         ],
       ),

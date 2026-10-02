@@ -16,13 +16,25 @@ String signedDurationLabel(Duration duration) {
 /// A card showing one period's balance.
 class BalanceCard extends StatelessWidget {
   /// Creates a card labelled [title] for [balance].
-  const BalanceCard({required this.title, required this.balance, super.key});
+  const BalanceCard({
+    required this.title,
+    required this.balance,
+    this.infoOnly = false,
+    super.key,
+  });
 
   /// The period's name, e.g. `This week`.
   final String title;
 
   /// The computed balance for the period.
   final Balance balance;
+
+  /// Whether this period is excluded from today's target.
+  ///
+  /// Drawn neutral rather than red or green: a colour that reads as "you are
+  /// behind" would contradict a card that, by the user's choice, cannot make
+  /// anyone stay longer.
+  final bool infoOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +53,7 @@ class BalanceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              title,
+              infoOnly ? '$title · Info only' : title,
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: AppTextSize.label,
@@ -62,8 +74,14 @@ class BalanceCard extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: _BalanceChip(
                   label: signedDurationLabel(difference),
-                  fill: balance.isPositive ? status.success : status.danger,
-                  foreground: status.onStatus,
+                  fill: infoOnly
+                      ? theme.colorScheme.surfaceContainerHighest
+                      : balance.isPositive
+                      ? status.success
+                      : status.danger,
+                  foreground: infoOnly
+                      ? theme.colorScheme.onSurface
+                      : status.onStatus,
                 ),
               ),
             const SizedBox(height: AppSpacing.sm),

@@ -100,6 +100,9 @@ class TargetToday {
 /// red): spread over the week's days left, or the month's, or the year's --
 /// the first that keeps the cut within [maxSurplusSlice].
 ///
+/// Only the cards in [Settings.countedHorizons] take part; the rest are info
+/// only. With none counted, today is the plain required day.
+///
 /// Caps the check-out at 23:59 of the check-in day. Returns null when today
 /// is not a working day — there is no meaningful target to show.
 TargetToday? targetForToday({
@@ -124,14 +127,20 @@ TargetToday? targetForToday({
   var level = DeficitLevel.none;
   var deficit = Duration.zero;
   var spreadOver = 1;
+  // Info-only cards are left out here, so they can neither lengthen today
+  // (as a deficit) nor shorten it (as the tightest surplus).
+  final counted = settings.countedHorizons;
   final differences = <Horizon, Duration>{
-    Horizon.week: difference(startOfWeek(checkIn), endOfWeek(checkIn)),
-    Horizon.month: difference(startOfMonth(checkIn), endOfMonth(checkIn)),
-    Horizon.year: difference(startOfYear(checkIn), endOfYear(checkIn)),
+    if (counted.contains(Horizon.week))
+      Horizon.week: difference(startOfWeek(checkIn), endOfWeek(checkIn)),
+    if (counted.contains(Horizon.month))
+      Horizon.month: difference(startOfMonth(checkIn), endOfMonth(checkIn)),
+    if (counted.contains(Horizon.year))
+      Horizon.year: difference(startOfYear(checkIn), endOfYear(checkIn)),
   };
-  final week = behind(differences[Horizon.week]!);
-  final month = behind(differences[Horizon.month]!);
-  final year = behind(differences[Horizon.year]!);
+  final week = behind(differences[Horizon.week] ?? Duration.zero);
+  final month = behind(differences[Horizon.month] ?? Duration.zero);
+  final year = behind(differences[Horizon.year] ?? Duration.zero);
   if (week > Duration.zero) {
     level = DeficitLevel.week;
     deficit = week;
@@ -154,7 +163,7 @@ TargetToday? targetForToday({
   Horizon? tightest;
   Horizon? surplusSpread;
   var surplusCapped = false;
-  if (level == DeficitLevel.none) {
+  if (level == DeficitLevel.none && differences.isNotEmpty) {
     // All green here, so every difference is >= 0 and the smallest is how
     // much can come off before the first card turns red.
     final least = differences.entries.reduce(
@@ -167,6 +176,7 @@ TargetToday? targetForToday({
         surplus: surplus,
         now: checkIn,
         settings: settings,
+        widest: differences.keys.reduce((a, b) => b.index > a.index ? b : a),
       );
       slice = -cut.slice;
       surplusSpread = cut.spread;

@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.2+1
+version: 1.0.3+1
 
 environment:
   sdk: ^3.12.2
