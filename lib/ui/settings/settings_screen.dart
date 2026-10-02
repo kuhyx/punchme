@@ -17,6 +17,7 @@ import 'package:punchme/ui/settings/weekday_picker.dart';
 import 'package:punchme/ui/settings/wifi_ssids_field.dart';
 import 'package:punchme/ui/settings/wifi_status_card.dart';
 import 'package:punchme/ui/settings/write_tag_screen.dart';
+import 'package:punchme/ui/wifi/current_network_picker.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 
 /// Edits the work expectations and offers the three exports.
@@ -29,7 +30,7 @@ class SettingsScreen extends StatefulWidget {
     this.nfc,
     this.syncProbe,
     this.syncConnect,
-    this.currentSsid = currentWifiSsid,
+    this.picker = const CurrentNetworkPicker(),
     this.armWifi = setWifiArmed,
     super.key,
   });
@@ -58,8 +59,9 @@ class SettingsScreen extends StatefulWidget {
   /// Runs the interactive Google sign-in. Null means "use the real one".
   final SyncConnect? syncConnect;
 
-  /// Asks native for the currently connected Wi-Fi SSID. Injected for tests.
-  final Future<String?> Function() currentSsid;
+  /// Reads the current Wi-Fi network for "Add current network". Injected
+  /// for tests.
+  final CurrentNetworkPicker picker;
 
   /// Tells native whether any work SSID is configured. Injected for tests.
   final Future<void> Function({required bool armed}) armWifi;
@@ -124,6 +126,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: <Widget>[
+          // First: auto-punch is what makes the app hands-free, and the one
+          // setting a new install most needs to find.
+          const SectionHeader('Work Wi-Fi'),
+          WifiSsidsField(
+            ssids: _settings.workWifiSsids,
+            picker: widget.picker,
+            onChanged: (value) =>
+                _update(_settings.copyWith(workWifiSsids: value)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          WifiStatusCard(armed: _settings.workWifiSsids.isNotEmpty),
+          const SizedBox(height: AppSpacing.lg),
           const SectionHeader('Hours per working day'),
           HoursField(
             value: _settings.requiredPerDay,
@@ -145,16 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             now: widget.now,
             onChanged: (value) => _update(_settings.copyWith(freeDays: value)),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Work Wi-Fi'),
-          WifiSsidsField(
-            ssids: _settings.workWifiSsids,
-            currentSsid: widget.currentSsid,
-            onChanged: (value) =>
-                _update(_settings.copyWith(workWifiSsids: value)),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          WifiStatusCard(armed: _settings.workWifiSsids.isNotEmpty),
           const SizedBox(height: AppSpacing.lg),
           const SectionHeader('Clock tag'),
           ListTile(

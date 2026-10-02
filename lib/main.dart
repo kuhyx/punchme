@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
+import 'package:punchme/data/onboarding_store.dart';
 import 'package:punchme/export/export_channel.dart';
 import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';
@@ -14,6 +15,7 @@ import 'package:punchme/sync/sync_bootstrap.dart';
 import 'package:punchme/sync/sync_check.dart';
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/home/home_with_nfc.dart';
+import 'package:punchme/ui/onboarding/onboarding_gate.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 import 'package:punchme/wifi/wifi_observation_store.dart';
 
@@ -86,16 +88,28 @@ Future<String> reportSyncCheck(SyncedStore synced) async => (await runSyncCheck(
 /// The application root.
 class PunchmeApp extends StatelessWidget {
   /// Creates the app backed by [repository].
-  const PunchmeApp({required this.repository, super.key});
+  const PunchmeApp({
+    required this.repository,
+    this.openOnboarding = OnboardingStore.open,
+    super.key,
+  });
 
   /// Where days are read from and written to.
   final DayRepository repository;
+
+  /// Opens the first-launch marker. Injected so a test never reaches the
+  /// path_provider channel, which has no host under `flutter_test`.
+  final Future<OnboardingStore> Function() openOnboarding;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'punchme',
     theme: buildLightTheme(),
     darkTheme: buildDarkTheme(),
-    home: HomeWithNfc(repository: repository),
+    home: OnboardingGate(
+      repository: repository,
+      openStore: openOnboarding,
+      child: HomeWithNfc(repository: repository),
+    ),
   );
 }

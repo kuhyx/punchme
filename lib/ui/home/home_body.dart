@@ -25,6 +25,7 @@ class HomeBody extends StatelessWidget {
     required this.progress,
     this.target,
     this.onUndo,
+    this.onEditToday,
     super.key,
   });
 
@@ -52,6 +53,10 @@ class HomeBody extends StatelessWidget {
   /// Reverses the last punch, when there is one to reverse.
   final VoidCallback? onUndo;
 
+  /// Opens today's times for correction. Null before the first punch of
+  /// the day, when there is nothing to edit yet.
+  final VoidCallback? onEditToday;
+
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Column(
@@ -64,6 +69,14 @@ class HomeBody extends StatelessWidget {
             progress: progress,
           ),
         ),
+        // Directly under the button: a punch that landed at the wrong time
+        // is fixed right where it was made, not three screens away.
+        if (onEditToday != null)
+          TextButton.icon(
+            onPressed: onEditToday,
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text("Edit today's times"),
+          ),
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: TodaySummary(

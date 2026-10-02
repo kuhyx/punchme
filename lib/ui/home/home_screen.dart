@@ -12,12 +12,14 @@ import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/nfc/punch_tag.dart';
+import 'package:punchme/ui/history/day_editor.dart';
 import 'package:punchme/ui/home/background_punch.dart';
 import 'package:punchme/ui/home/checkout_alarm_offer.dart';
 import 'package:punchme/ui/home/commit_window.dart';
 import 'package:punchme/ui/home/home_body.dart';
 import 'package:punchme/ui/home/home_nav_actions.dart';
 import 'package:punchme/ui/home/home_punch_handlers.dart';
+import 'package:punchme/ui/home/home_snacks.dart';
 import 'package:punchme/ui/home/punch_banner.dart';
 
 /// The app's landing screen.
@@ -55,7 +57,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with CommitWindow<HomeScreen>, BackgroundPunch<HomeScreen> {
+    with
+        CommitWindow<HomeScreen>,
+        BackgroundPunch<HomeScreen>,
+        HomeSnacks<HomeScreen> {
   List<DayEntry> _days = <DayEntry>[];
   bool _loading = true;
 
@@ -63,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen>
   /// nothing meaningful to aim at (non-working day, week already banked).
   TargetToday? _target;
 
-  ScaffoldMessengerState? _messenger;
   late final PunchCoordinator _coordinator = PunchCoordinator(
     repository: widget.repository,
     now: widget.now,
@@ -81,21 +85,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
     unawaited(_reload());
-  }
-
-  @override
-  void dispose() {
-    // A snack bar outlives the widget that showed it, and its dismiss timer
-    // would still be pending after the tree is gone.
-    _messenger?.clearSnackBars();
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Captured because dispose() must not touch the element tree.
-    _messenger = ScaffoldMessenger.of(context);
   }
 
   Future<void> _reload() async {
@@ -151,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen>
     // The banner goes up first so the modal alarm offer draws on top of it.
     // It is deliberately short-lived, so anything the alarm flow reports
     // afterwards is not left queued behind it.
-    _showSnack(punchBanner(result: result, onUndo: _undo));
+    showSnack(punchBanner(result: result, onUndo: _undo));
     // The alarm offer stays here rather than in the coordinator: it is a modal
     // dialog, and a background punch has no widget attached to show one from.
     if (result.checkedIn) {
@@ -173,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void reportBackgroundPunch(PunchResult result) =>
-      _showSnack(punchBanner(result: result, onUndo: _undo));
+      showSnack(punchBanner(result: result, onUndo: _undo));
 
   /// Offers the alarm, adopting the target when the dialog was shown.
   Future<void> _offerCheckOutAlarm(DateTime checkIn) async {
@@ -183,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen>
       // Clearing the banner is the dialog's job, not the punch's: it only
       // happens when a dialog is actually raised, so a check-in with no
       // target keeps the banner that is its only report.
-      beforeDialog: () => _messenger?.hideCurrentSnackBar(),
+      beforeDialog: () => messenger?.hideCurrentSnackBar(),
       checkIn: checkIn,
       entries: _days,
       setAlarm: widget.setAlarm,
@@ -194,19 +183,6 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _target = target);
   }
 
-  @override
-  void warnUnknownTagVersion() =>
-      _showSnack(const SnackBar(content: Text(kUnknownTagVersionMessage)));
-
-  @override
-  void warnBlankTag() =>
-      _showSnack(const SnackBar(content: Text(kBlankTagMessage)));
-
-  // Deliberately neither clears nor hides first: the punch banner is often
-  // followed by the alarm flow raising its own message, and dismissing the
-  // current bar here takes that queued message down with it.
-  void _showSnack(SnackBar bar) => _messenger?.showSnackBar(bar);
-
   Future<void> _undo() async {
     final today = _today;
     if (today == null) {
@@ -214,6 +190,16 @@ class _HomeScreenState extends State<HomeScreen>
     }
     await _coordinator.undoPunch(today);
     await _reload();
+  }
+
+  Future<void> _editToday(DayEntry today) async {
+    if (await editDay(
+      context: context,
+      repository: widget.repository,
+      entry: today,
+    )) {
+      await _reload();
+    }
   }
 
   @override
@@ -244,6 +230,7 @@ class _HomeScreenState extends State<HomeScreen>
         progress: progress,
         target: _target,
         onUndo: _undo,
+        onEditToday: today == null ? null : () => _editToday(today),
       ),
     );
   }

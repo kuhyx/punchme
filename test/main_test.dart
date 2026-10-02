@@ -91,6 +91,8 @@ void main() {
     });
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (_) async => dir.path);
+    // A returning install: onboarding already ran, so home is what shows.
+    File('${dir.path}/onboarding_done').createSync();
 
     await tester.pumpWidget(await bootstrap());
     await tester.pumpAndSettle();

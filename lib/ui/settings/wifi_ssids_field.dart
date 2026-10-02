@@ -3,14 +3,21 @@ library;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:punchme/ui/wifi/current_network_picker.dart';
+import 'package:punchme/wifi/wifi_channel.dart';
 
-/// Lets the user add and remove work Wi-Fi SSIDs by name.
+/// Lets the user add the network they are on, and remove configured ones.
+///
+/// There is deliberately no free-text entry: a typed SSID that is off by one
+/// character never matches, and nothing would ever say why auto-punch is
+/// silent. Reading the name off the live connection cannot be mistyped.
 class WifiSsidsField extends StatefulWidget {
   /// Creates a field over [ssids].
   const WifiSsidsField({
     required this.ssids,
     required this.onChanged,
-    this.currentSsid,
+    this.picker = const CurrentNetworkPicker(),
+    this.openSettings = openWifiAppSettings,
     super.key,
   });
 
@@ -20,33 +27,30 @@ class WifiSsidsField extends StatefulWidget {
   /// Called with the new set when one is added or removed.
   final ValueChanged<Set<String>> onChanged;
 
-  /// Asks for the SSID of the network the phone is on right now.
-  ///
-  /// Null hides the "use current network" button, so a build with no host
-  /// behind the channel does not offer a button that can only ever add
-  /// nothing.
-  final Future<String?> Function()? currentSsid;
+  /// Reads the current network, explaining and asking for location first.
+  final CurrentNetworkPicker picker;
+
+  /// Opens the system app-settings page. Injected for tests.
+  final Future<void> Function() openSettings;
 
   @override
   State<WifiSsidsField> createState() => _WifiSsidsFieldState();
 }
 
 class _WifiSsidsFieldState extends State<WifiSsidsField> {
-  final TextEditingController _controller = TextEditingController();
+  /// Why the last attempt added nothing, until the next attempt.
+  NetworkPick? _failure;
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _add(String ssid) {
-    final trimmed = ssid.trim();
-    if (trimmed.isEmpty || widget.ssids.contains(trimmed)) {
+  Future<void> _addCurrent() async {
+    final pick = await widget.picker.pick(context);
+    if (!mounted) {
       return;
     }
-    widget.onChanged(<String>{...widget.ssids, trimmed});
-    _controller.clear();
+    setState(() => _failure = pick.message == null ? null : pick);
+    final ssid = pick.ssid;
+    if (ssid != null && !widget.ssids.contains(ssid)) {
+      widget.onChanged(<String>{...widget.ssids, ssid});
+    }
   }
 
   void _remove(String ssid) => widget.onChanged(<String>{
@@ -54,46 +58,27 @@ class _WifiSsidsFieldState extends State<WifiSsidsField> {
       if (existing != ssid) existing,
   });
 
-  Future<void> _useCurrent() async {
-    final ssid = await widget.currentSsid?.call();
-    if (ssid != null) {
-      _add(ssid);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final sorted = widget.ssids.toList()..sort();
+    final failure = _failure;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                decoration: const InputDecoration(
-                  hintText: 'Network name (SSID)',
-                ),
-                onSubmitted: _add,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'Add',
-              onPressed: () => _add(_controller.text),
-            ),
-          ],
+        OutlinedButton.icon(
+          onPressed: _addCurrent,
+          icon: const Icon(Icons.wifi),
+          label: const Text('Add current network'),
         ),
-        if (widget.currentSsid != null)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: _useCurrent,
-              child: const Text('Use current network'),
+        if (failure != null) ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          Text(failure.message!),
+          if (failure.needsSettings)
+            TextButton(
+              onPressed: widget.openSettings,
+              child: const Text('Open app settings'),
             ),
-          ),
+        ],
         const SizedBox(height: AppSpacing.sm),
         if (sorted.isEmpty)
           const Text('No work Wi-Fi networks yet')

@@ -52,23 +52,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _edit(DayEntry entry) async {
-    final result = await showDialog<DayEdit>(
+    if (await editDay(
       context: context,
-      builder: (_) => DayEditor(entry: entry),
-    );
-    if (result == null) {
-      return;
+      repository: widget.repository,
+      entry: entry,
+    )) {
+      await _reload();
     }
-    if (result.delete) {
-      await widget.repository.deleteDay(entry.dateKey);
-    } else {
-      // Re-keying an entry to another day must not leave the old one behind.
-      if (result.entry.dateKey != entry.dateKey) {
-        await widget.repository.deleteDay(entry.dateKey);
-      }
-      await widget.repository.saveDay(result.entry);
-    }
-    await _reload();
   }
 
   Future<void> _addMissingDay() async {

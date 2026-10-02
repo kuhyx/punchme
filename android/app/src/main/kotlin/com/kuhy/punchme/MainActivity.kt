@@ -18,7 +18,8 @@ private const val CHANNEL = "kuhy.punchme/nfc"
  */
 class MainActivity : FlutterActivity() {
     private var channel: MethodChannel? = null
-    private val wifiChannel = WifiChannel(this) { requestWifiPermissions(this) }
+    private val wifiPermissions = WifiPermissionAsker(this)
+    private val wifiChannel = WifiChannel(this) { done -> wifiPermissions.ask(done) }
 
     /** The cold-start payload, held until Dart asks for it. */
     private var launchPayload: String? = null
@@ -82,6 +83,6 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        onWifiPermissionResult(this, requestCode)
+        wifiPermissions.onResult(requestCode)
     }
 }

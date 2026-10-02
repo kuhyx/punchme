@@ -2,9 +2,12 @@ package com.kuhy.punchme
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -23,12 +26,16 @@ private const val PREF_ARMED = "armed"
  * counts as work -- that stays a Dart-side decision, made from the SSID this
  * reports.
  *
- * [requestPermissions] is called whenever Dart asks for something that needs
- * a permission not yet granted. Checking permission state needs no Activity,
- * but *asking* for one does, so this stays a callback into [MainActivity]
- * rather than something this class can do on its own.
+ * [requestPermissions] runs only when Dart explicitly asks for location, after
+ * it has shown its own explanation -- reading the SSID or arming the watcher
+ * never raises a prompt by itself. Checking permission state needs no
+ * Activity, but *asking* for one does, so this stays a callback into
+ * [MainActivity] rather than something this class can do on its own.
  */
-class WifiChannel(private val context: Context, private val requestPermissions: () -> Unit) {
+class WifiChannel(
+    private val context: Context,
+    private val requestPermissions: (done: (Boolean) -> Unit) -> Unit,
+) {
     private var channel: MethodChannel? = null
 
     /** Starts answering Dart's requests on [engine]. */
@@ -36,18 +43,15 @@ class WifiChannel(private val context: Context, private val requestPermissions: 
         channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).apply {
             setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "getCurrentSsid" -> {
-                        if (!locationGranted(context)) {
-                            requestPermissions()
-                        }
-                        result.success(currentSsid(context))
-                    }
+                    "getCurrentSsid" -> result.success(currentSsid(context))
                     "setWifiArmed" -> {
-                        val armed = call.arguments as? Boolean ?: false
-                        setArmed(context, armed)
-                        if (armed && !locationGranted(context)) {
-                            requestPermissions()
-                        }
+                        setArmed(context, call.arguments as? Boolean ?: false)
+                        result.success(null)
+                    }
+                    "requestLocationPermission" ->
+                        requestPermissions { granted -> result.success(granted) }
+                    "openAppSettings" -> {
+                        openAppSettings(context)
                         result.success(null)
                     }
                     "getWifiStatus" -> result.success(statusMap(context))
@@ -62,6 +66,15 @@ class WifiChannel(private val context: Context, private val requestPermissions: 
         channel?.setMethodCallHandler(null)
         channel = null
     }
+}
+
+/** Opens this app's page in system settings, where permissions can be granted by hand. */
+private fun openAppSettings(context: Context) {
+    val intent = Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", context.packageName, null),
+    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(intent)
 }
 
 private fun statusMap(context: Context): Map<String, Boolean> = mapOf(

@@ -1,137 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/ui/settings/wifi_ssids_field.dart';
+import 'package:punchme/ui/wifi/current_network_picker.dart';
+
+import '../../support/fake_wifi.dart';
 
 void main() {
-  Future<Set<String>?> pump(
+  late List<Set<String>> changes;
+  late int settingsOpened;
+
+  setUp(() {
+    changes = <Set<String>>[];
+    settingsOpened = 0;
+  });
+
+  Future<void> pump(
     WidgetTester tester, {
     Set<String> ssids = const <String>{},
-    Future<String?> Function()? currentSsid,
-    required void Function(Set<String>) record,
+    CurrentNetworkPicker? picker,
   }) async {
-    Set<String>? latest;
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: WifiSsidsField(
             ssids: ssids,
-            currentSsid: currentSsid,
-            onChanged: (value) {
-              latest = value;
-              record(value);
-            },
+            picker: picker ?? fakePicker(),
+            openSettings: () async => settingsOpened++,
+            onChanged: changes.add,
           ),
         ),
       ),
     );
-    return latest;
+  }
+
+  Future<void> addCurrent(WidgetTester tester) async {
+    await tester.tap(find.text('Add current network'));
+    await tester.pumpAndSettle();
   }
 
   testWidgets('says so when there are none', (tester) async {
-    await pump(tester, record: (_) {});
+    await pump(tester);
     expect(find.text('No work Wi-Fi networks yet'), findsOneWidget);
   });
 
+  testWidgets('offers no free-text entry', (tester) async {
+    await pump(tester);
+    expect(find.byType(TextField), findsNothing);
+  });
+
   testWidgets('lists existing SSIDs as chips', (tester) async {
-    await pump(tester, ssids: const <String>{'Office'}, record: (_) {});
+    await pump(tester, ssids: const <String>{'Office'});
     expect(find.text('Office'), findsOneWidget);
   });
 
-  testWidgets('typing and submitting adds a network', (tester) async {
-    Set<String>? recorded;
-    await pump(tester, record: (value) => recorded = value);
-
-    await tester.enterText(find.byType(TextField), 'Office');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-
-    expect(recorded, const <String>{'Office'});
+  testWidgets('adds the network the phone is on', (tester) async {
+    await pump(tester, ssids: const <String>{'Annex'});
+    await addCurrent(tester);
+    expect(changes, <Set<String>>[
+      const <String>{'Annex', 'Office'},
+    ]);
   });
 
-  testWidgets('the add button adds the typed network', (tester) async {
-    Set<String>? recorded;
-    await pump(tester, record: (value) => recorded = value);
-
-    await tester.enterText(find.byType(TextField), 'Office');
-    await tester.tap(find.byTooltip('Add'));
-    await tester.pumpAndSettle();
-
-    expect(recorded, const <String>{'Office'});
+  testWidgets('a network already listed adds nothing', (tester) async {
+    await pump(tester, ssids: const <String>{'Office'});
+    await addCurrent(tester);
+    expect(changes, isEmpty);
   });
 
-  testWidgets('blank input adds nothing', (tester) async {
-    var called = false;
-    await pump(tester, record: (_) => called = true);
-
-    await tester.tap(find.byTooltip('Add'));
-    await tester.pumpAndSettle();
-
-    expect(called, isFalse);
+  testWidgets('says to connect first when not on Wi-Fi', (tester) async {
+    await pump(tester, picker: fakePicker(ssid: null));
+    await addCurrent(tester);
+    expect(changes, isEmpty);
+    expect(find.text(kNotOnWifiMessage), findsOneWidget);
+    expect(find.text('Open app settings'), findsNothing);
   });
 
-  testWidgets('a duplicate name adds nothing', (tester) async {
-    var called = false;
+  testWidgets('a refusal explains and offers app settings', (tester) async {
     await pump(
       tester,
-      ssids: const <String>{'Office'},
-      record: (_) => called = true,
+      picker: fakePicker(granted: false, requestGrants: false),
     );
+    await addCurrent(tester);
+    expect(find.text(kLocationDeniedMessage), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'Office');
-    await tester.tap(find.byTooltip('Add'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open app settings'));
+    expect(settingsOpened, 1);
+  });
 
-    expect(called, isFalse);
+  testWidgets('backing out of the explanation reports nothing', (tester) async {
+    await pump(
+      tester,
+      picker: fakePicker(granted: false, explainAccepted: false),
+    );
+    await addCurrent(tester);
+    expect(changes, isEmpty);
+    expect(find.text(kLocationDeniedMessage), findsNothing);
+    expect(find.text(kNotOnWifiMessage), findsNothing);
   });
 
   testWidgets('deleting a chip removes that network', (tester) async {
-    Set<String>? recorded;
-    await pump(
-      tester,
-      ssids: const <String>{'Office', 'Annex'},
-      record: (value) => recorded = value,
-    );
-
+    await pump(tester, ssids: const <String>{'Office', 'Annex'});
     await tester.tap(find.byTooltip('Delete').first);
     await tester.pumpAndSettle();
-
-    expect(recorded, hasLength(1));
-  });
-
-  testWidgets('hides the button when no current-network probe is given', (
-    tester,
-  ) async {
-    await pump(tester, record: (_) {});
-    expect(find.text('Use current network'), findsNothing);
-  });
-
-  testWidgets('use current network adds the reported SSID', (tester) async {
-    Set<String>? recorded;
-    await pump(
-      tester,
-      currentSsid: () async => 'Office',
-      record: (value) => recorded = value,
-    );
-
-    await tester.tap(find.text('Use current network'));
-    await tester.pumpAndSettle();
-
-    expect(recorded, const <String>{'Office'});
-  });
-
-  testWidgets('use current network does nothing when there is none', (
-    tester,
-  ) async {
-    var called = false;
-    await pump(
-      tester,
-      currentSsid: () async => null,
-      record: (_) => called = true,
-    );
-
-    await tester.tap(find.text('Use current network'));
-    await tester.pumpAndSettle();
-
-    expect(called, isFalse);
+    expect(changes.single, hasLength(1));
   });
 }

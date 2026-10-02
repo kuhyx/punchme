@@ -3,6 +3,7 @@ library;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
 import 'package:punchme/ui/home/today_summary.dart';
@@ -127,4 +128,33 @@ class _DayEditorState extends State<DayEditor> {
       ],
     );
   }
+}
+
+/// Opens a [DayEditor] over [entry] and writes the outcome to [repository].
+///
+/// Shared by History and the home screen's "Edit today's times", so both
+/// handle a delete, or a day re-keyed to another date, the same way. Returns
+/// whether anything was written.
+Future<bool> editDay({
+  required BuildContext context,
+  required DayRepository repository,
+  required DayEntry entry,
+}) async {
+  final result = await showDialog<DayEdit>(
+    context: context,
+    builder: (_) => DayEditor(entry: entry),
+  );
+  if (result == null) {
+    return false;
+  }
+  if (result.delete) {
+    await repository.deleteDay(entry.dateKey);
+  } else {
+    // Re-keying an entry to another day must not leave the old one behind.
+    if (result.entry.dateKey != entry.dateKey) {
+      await repository.deleteDay(entry.dateKey);
+    }
+    await repository.saveDay(result.entry);
+  }
+  return true;
 }

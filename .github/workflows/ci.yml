@@ -168,14 +168,17 @@ jobs:
           cp build/app/outputs/flutter-apk/app-daily-release.apk "$out"
           echo "path=$out" >> "$GITHUB_OUTPUT"
 
-      - name: Publish the per-commit prerelease
+      # A regular release, not a GitHub prerelease: every build that passed
+      # the gate is installable, and a prerelease flag hides it from
+      # "latest" and from updaters that skip prereleases. The `-build.N`
+      # suffix stays so each commit still gets its own tag.
+      - name: Publish the per-commit release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           tag="v${{ steps.ver.outputs.semver }}-build.${{ steps.code.outputs.value }}"
           gh release create "$tag" "${{ steps.art.outputs.path }}" \
-            --prerelease \
             --target "${{ github.sha }}" \
             --title "$tag" \
             --notes "Automated build of ${{ github.sha }} (versionCode ${{ steps.code.outputs.value }})."

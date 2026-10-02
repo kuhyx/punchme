@@ -22,6 +22,12 @@ const String kSetWifiArmedMethod = 'setWifiArmed';
 /// The method Dart calls to ask native what permissions are granted.
 const String kGetWifiStatusMethod = 'getWifiStatus';
 
+/// The method Dart calls to raise the location prompt, after explaining it.
+const String kRequestLocationMethod = 'requestLocationPermission';
+
+/// The method Dart calls to open this app's page in system settings.
+const String kOpenAppSettingsMethod = 'openAppSettings';
+
 /// Answers Wi-Fi observations reported by the foreground service or the
 /// periodic worker.
 ///
@@ -90,6 +96,30 @@ Future<void> setWifiArmed({required bool armed, MethodChannel? channel}) async {
   } on MissingPluginException {
     // No host behind the channel (tests, or a platform with none) -- nothing
     // to arm.
+  }
+}
+
+/// Raises the system location prompt and reports whether it was granted.
+///
+/// Native never prompts on its own: callers show [kLocationRationale] first,
+/// so the user knows why a time tracker wants location before Android asks.
+Future<bool> requestWifiLocation({MethodChannel? channel}) async {
+  final ch = channel ?? const MethodChannel(kWifiChannelName);
+  try {
+    return await ch.invokeMethod<bool>(kRequestLocationMethod) ?? false;
+  } on MissingPluginException {
+    return false;
+  }
+}
+
+/// Opens this app's system settings page, where a permission Android has
+/// stopped prompting for can still be granted by hand.
+Future<void> openWifiAppSettings({MethodChannel? channel}) async {
+  final ch = channel ?? const MethodChannel(kWifiChannelName);
+  try {
+    await ch.invokeMethod<void>(kOpenAppSettingsMethod);
+  } on MissingPluginException {
+    // No host behind the channel -- no settings page to open.
   }
 }
 

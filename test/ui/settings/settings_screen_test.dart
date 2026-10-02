@@ -161,6 +161,13 @@ void main() {
     testWidgets('every tap survives overlapping saves', (tester) async {
       final repo = FakeDayRepository();
       await pump(tester, repo);
+      // Work Wi-Fi sits above the calendar now, pushing it below the fold.
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey<String>('free-day-2026-08-06')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
 
       // No settle between taps: each one starts a whole-file write while the
       // previous is still in flight. Without serialising, a later write
