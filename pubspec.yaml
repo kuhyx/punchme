@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.8+1
+version: 1.0.9+1
 
 environment:
   sdk: ^3.12.2
@@ -47,7 +47,7 @@ dependencies:
   design_system:
     git:
       url: https://github.com/kuhyx/utils
-      ref: design_system-v0.2.1
+      ref: design_system-v0.3.0
       path: design_system
 
   flutter:
