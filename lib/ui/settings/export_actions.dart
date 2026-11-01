@@ -7,7 +7,7 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/csv_export.dart';
 import 'package:punchme/export/ics_export.dart';
 import 'package:punchme/export/json_export.dart';
-import 'package:punchme/export/share_target.dart';
+import 'package:punchme/export/save_target.dart';
 
 /// Offers CSV, JSON and iCalendar exports of the recorded days.
 class ExportActions extends StatelessWidget {

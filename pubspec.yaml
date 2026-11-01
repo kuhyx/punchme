@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.6+1
+version: 1.0.7+1
 
 environment:
   sdk: ^3.12.2
@@ -21,7 +21,7 @@ dependencies:
   crdt_sync:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_dart-v0.11.1
+      ref: crdt_sync_dart-v0.11.3
       path: crdt_sync_dart
 
   # Cross-device sync: the shared CRDT log plus the Flutter-side glue
@@ -31,8 +31,16 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.3.3
+      ref: crdt_sync_flutter-v0.3.5
       path: crdt_sync_flutter
+
+  # Export plumbing: Save-as picker (never share-only), shared with the other
+  # apps.
+  data_transfer_flutter:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: data_transfer_flutter-v0.2.0
+      path: data_transfer_flutter
 
   # Owns the frozen palette and the theme builders. There is deliberately no
   # local theme.dart, so this app cannot drift off the shared token table.
@@ -68,15 +76,12 @@ dependencies:
   nfc_manager: 4.2.1
   nfc_manager_ndef: 1.1.0
 
-  # Export: write to the app's temp dir, then hand the file to the share sheet.
-  # Android-only app, so there is no web/desktop branch to conditionally import.
   path: 1.9.1
   path_provider: 2.1.6
 
   # Direct, not transitive: checkout_alarm.dart injects a Platform so the
   # SET_ALARM intent can be exercised off-Android in tests.
   platform: 3.2.0
-  share_plus: 13.3.1
 
 dev_dependencies:
   # Generates the Android launcher icons from assets/icon/ -- source art comes

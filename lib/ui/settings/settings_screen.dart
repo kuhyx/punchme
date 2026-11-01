@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
-import 'package:punchme/export/share_target.dart';
+import 'package:punchme/export/save_target.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/nfc/nfc_service.dart';
 import 'package:punchme/ui/settings/counted_horizons_field.dart';
@@ -26,7 +26,7 @@ class SettingsScreen extends StatefulWidget {
   /// Creates the settings screen backed by [repository].
   const SettingsScreen({
     required this.repository,
-    this.share = shareTextFile,
+    this.share = saveTextFile,
     this.now = DateTime.now,
     this.nfc,
     this.syncProbe,

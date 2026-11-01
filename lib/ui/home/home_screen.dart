@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
-import 'package:punchme/export/share_target.dart';
+import 'package:punchme/export/save_target.dart';
 import 'package:punchme/logic/checkout_alarm.dart';
 import 'package:punchme/logic/day_state.dart';
 import 'package:punchme/logic/punch_coordinator.dart';
@@ -28,7 +28,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.repository,
     this.now = DateTime.now,
-    this.share = shareTextFile,
+    this.share = saveTextFile,
     this.setAlarm = setCheckOutAlarm,
     this.onReady,
     super.key,
