@@ -228,7 +228,7 @@ main() {
             ;;
         build) phase_build ;;
         build-stage) build_stage "${2:-}" ;;
-        *) die "unknown phase '$1' (all|setup|analyze|format|coverage --shard I/N|coverage-merge|build|build-stage config|dart|kotlin|shrink|assemble)" ;;
+        *) die "unknown phase '$1' (all|setup|analyze|format|coverage --shard I/N|coverage-merge|build|build-stage config|dart|kotlin|plugins|shrink|assemble)" ;;
     esac
 
     echo "CI mirror ${1:-all} passed."

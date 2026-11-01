@@ -34,8 +34,9 @@ build_stage() {
         config) build_config ;;
         dart) build_gradle ":app:compileFlutterBuild$BUILD_VARIANT" ;;
         kotlin) build_gradle ":app:compile${BUILD_VARIANT}Kotlin" ;;
+        plugins) build_gradle compileReleaseJavaWithJavac ;;
         shrink) build_gradle ":app:minify${BUILD_VARIANT}WithR8" ;;
         assemble) build_gradle ":app:assemble$BUILD_VARIANT" -x ":app:lintVital$BUILD_VARIANT" ;;
-        *) die "usage: ci_mirror.sh build-stage config|dart|kotlin|shrink|assemble" ;;
+        *) die "usage: ci_mirror.sh build-stage config|dart|kotlin|plugins|shrink|assemble" ;;
     esac
 }

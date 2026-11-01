@@ -174,8 +174,16 @@ repos:
         always_run: true
         require_serial: true
         stages: [manual]
+      - id: ci-mirror-build-plugins
+        name: CI mirror 14 (apk plugin javac)
+        entry: bash scripts/ci_mirror.sh build-stage plugins
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
       - id: ci-mirror-build-shrink
-        name: CI mirror 14 (apk R8)
+        name: CI mirror 15 (apk R8)
         entry: bash scripts/ci_mirror.sh build-stage shrink
         language: system
         pass_filenames: false
@@ -183,7 +191,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-assemble
-        name: CI mirror 15 (apk assemble)
+        name: CI mirror 16 (apk assemble)
         entry: bash scripts/ci_mirror.sh build-stage assemble
         language: system
         pass_filenames: false
