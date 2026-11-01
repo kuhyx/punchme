@@ -134,9 +134,41 @@ repos:
         always_run: true
         require_serial: true
         stages: [manual]
-      - id: ci-mirror-build
-        name: CI mirror 9 (release apk)
-        entry: bash scripts/ci_mirror.sh build
+      - id: ci-mirror-build-config
+        name: CI mirror 9 (apk config)
+        entry: bash scripts/ci_mirror.sh build-stage config
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      - id: ci-mirror-build-dart
+        name: CI mirror 10 (apk dart AOT)
+        entry: bash scripts/ci_mirror.sh build-stage dart
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      - id: ci-mirror-build-kotlin
+        name: CI mirror 11 (apk kotlin)
+        entry: bash scripts/ci_mirror.sh build-stage kotlin
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      - id: ci-mirror-build-shrink
+        name: CI mirror 12 (apk R8)
+        entry: bash scripts/ci_mirror.sh build-stage shrink
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      - id: ci-mirror-build-assemble
+        name: CI mirror 13 (apk assemble)
+        entry: bash scripts/ci_mirror.sh build-stage assemble
         language: system
         pass_filenames: false
         always_run: true

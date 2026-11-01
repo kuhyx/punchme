@@ -30,6 +30,7 @@ log() { printf '==> %s\n' "$1"; }
 
 # shellcheck source=/dev/null
 source "$REPO_DIR/scripts/ci_mirror_shards.sh"
+source "$REPO_DIR/scripts/ci_mirror_build.sh"
 
 # Echoes the path of the lcov report, or exits when the test run never made it.
 coverage_report() {
@@ -225,7 +226,8 @@ main() {
             phase_coverage_gate
             ;;
         build) phase_build ;;
-        *) die "unknown phase '$1' (all|setup|analyze|format|coverage --shard I/N|coverage-merge|build)" ;;
+        build-stage) build_stage "${2:-}" ;;
+        *) die "unknown phase '$1' (all|setup|analyze|format|coverage --shard I/N|coverage-merge|build|build-stage config|dart|kotlin|shrink|assemble)" ;;
     esac
 
     echo "CI mirror ${1:-all} passed."
