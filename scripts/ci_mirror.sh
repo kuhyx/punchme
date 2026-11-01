@@ -24,12 +24,13 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPO_DIR
 
 # shellcheck disable=SC2034  # read by ci_mirror_shards.sh
-readonly GATE_SHARDS=4
+readonly GATE_SHARDS=6
 
 log() { printf '==> %s\n' "$1"; }
 
 # shellcheck source=/dev/null
 source "$REPO_DIR/scripts/ci_mirror_shards.sh"
+# shellcheck source=/dev/null
 source "$REPO_DIR/scripts/ci_mirror_build.sh"
 
 # Echoes the path of the lcov report, or exits when the test run never made it.

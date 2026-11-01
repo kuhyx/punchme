@@ -94,40 +94,56 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-cov-1
-        name: CI mirror 4 (tests, shard 1/4)
-        entry: bash scripts/ci_mirror.sh coverage --shard 0/4
+        name: CI mirror 4 (tests, shard 1/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 0/6
         language: system
         pass_filenames: false
         always_run: true
         require_serial: true
         stages: [manual]
       - id: ci-mirror-cov-2
-        name: CI mirror 5 (tests, shard 2/4)
-        entry: bash scripts/ci_mirror.sh coverage --shard 1/4
+        name: CI mirror 5 (tests, shard 2/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 1/6
         language: system
         pass_filenames: false
         always_run: true
         require_serial: true
         stages: [manual]
       - id: ci-mirror-cov-3
-        name: CI mirror 6 (tests, shard 3/4)
-        entry: bash scripts/ci_mirror.sh coverage --shard 2/4
+        name: CI mirror 6 (tests, shard 3/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 2/6
         language: system
         pass_filenames: false
         always_run: true
         require_serial: true
         stages: [manual]
       - id: ci-mirror-cov-4
-        name: CI mirror 7 (tests, shard 4/4)
-        entry: bash scripts/ci_mirror.sh coverage --shard 3/4
+        name: CI mirror 7 (tests, shard 4/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 3/6
         language: system
         pass_filenames: false
         always_run: true
         require_serial: true
         stages: [manual]
-      # Same 100% bar and every-lib-file guard, on the union of the 4 shards.
+      - id: ci-mirror-cov-5
+        name: CI mirror 8 (tests, shard 5/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 4/6
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      - id: ci-mirror-cov-6
+        name: CI mirror 9 (tests, shard 6/6)
+        entry: bash scripts/ci_mirror.sh coverage --shard 5/6
+        language: system
+        pass_filenames: false
+        always_run: true
+        require_serial: true
+        stages: [manual]
+      # Same 100% bar and every-lib-file guard, on the union of the 6 shards.
       - id: ci-mirror-cov-merge
-        name: CI mirror 8 (coverage 100%, union of shards)
+        name: CI mirror 10 (coverage 100%, union of shards)
         entry: bash scripts/ci_mirror.sh coverage-merge
         language: system
         pass_filenames: false
@@ -135,7 +151,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-config
-        name: CI mirror 9 (apk config)
+        name: CI mirror 11 (apk config)
         entry: bash scripts/ci_mirror.sh build-stage config
         language: system
         pass_filenames: false
@@ -143,7 +159,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-dart
-        name: CI mirror 10 (apk dart AOT)
+        name: CI mirror 12 (apk dart AOT)
         entry: bash scripts/ci_mirror.sh build-stage dart
         language: system
         pass_filenames: false
@@ -151,7 +167,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-kotlin
-        name: CI mirror 11 (apk kotlin)
+        name: CI mirror 13 (apk kotlin)
         entry: bash scripts/ci_mirror.sh build-stage kotlin
         language: system
         pass_filenames: false
@@ -159,7 +175,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-shrink
-        name: CI mirror 12 (apk R8)
+        name: CI mirror 14 (apk R8)
         entry: bash scripts/ci_mirror.sh build-stage shrink
         language: system
         pass_filenames: false
@@ -167,7 +183,7 @@ repos:
         require_serial: true
         stages: [manual]
       - id: ci-mirror-build-assemble
-        name: CI mirror 13 (apk assemble)
+        name: CI mirror 15 (apk assemble)
         entry: bash scripts/ci_mirror.sh build-stage assemble
         language: system
         pass_filenames: false
