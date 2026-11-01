@@ -23,7 +23,13 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPO_DIR
 
+# shellcheck disable=SC2034  # read by ci_mirror_shards.sh
+readonly GATE_SHARDS=4
+
 log() { printf '==> %s\n' "$1"; }
+
+# shellcheck source=/dev/null
+source "$REPO_DIR/scripts/ci_mirror_shards.sh"
 
 # Echoes the path of the lcov report, or exits when the test run never made it.
 coverage_report() {
@@ -139,6 +145,42 @@ enforce_full_coverage() {
     fi
 }
 
+phase_setup() {
+    log "flutter clean"
+    flutter clean
+    ensure_deps
+}
+
+ensure_deps() {
+    log "flutter pub get"
+    flutter pub get
+}
+
+phase_analyze() {
+    ensure_deps
+    log "flutter analyze --fatal-infos --fatal-warnings"
+    flutter analyze --fatal-infos --fatal-warnings
+}
+
+phase_format() {
+    log "dart format --set-exit-if-changed"
+    dart format --set-exit-if-changed lib/ test/
+}
+
+phase_coverage_gate() {
+    log "coverage gate"
+    enforce_coverage_completeness
+    enforce_full_coverage
+}
+
+# `--flavor daily`: a bare `build apk` fails looking for app-release.apk. CI runs
+# the same line; a gate that builds differently is not a gate.
+phase_build() {
+    ensure_deps
+    log "flutter build apk --release --flavor daily"
+    flutter build apk --release --flavor daily
+}
+
 main() {
     cd "$REPO_DIR"
 
@@ -160,32 +202,33 @@ main() {
         return
     fi
 
-    log "flutter clean"
-    flutter clean
+    case "${1:-all}" in
+        all)
+            phase_setup
+            phase_analyze
+            phase_format
+            log "flutter test --coverage"
+            flutter test --coverage
+            phase_coverage_gate
+            phase_build
+            ;;
+        setup) phase_setup ;;
+        analyze) phase_analyze ;;
+        format) phase_format ;;
+        coverage)
+            [[ "${2:-}" == "--shard" ]] || die "usage: ci_mirror.sh coverage --shard I/N"
+            ensure_deps
+            coverage_shard "${3:-}"
+            ;;
+        coverage-merge)
+            coverage_merge
+            phase_coverage_gate
+            ;;
+        build) phase_build ;;
+        *) die "unknown phase '$1' (all|setup|analyze|format|coverage --shard I/N|coverage-merge|build)" ;;
+    esac
 
-    log "flutter pub get"
-    flutter pub get
-
-    log "flutter analyze --fatal-infos --fatal-warnings"
-    flutter analyze --fatal-infos --fatal-warnings
-
-    log "dart format --set-exit-if-changed"
-    dart format --set-exit-if-changed lib/ test/
-
-    log "flutter test --coverage"
-    flutter test --coverage
-
-    log "coverage gate"
-    enforce_coverage_completeness
-    enforce_full_coverage
-
-    # `--flavor daily`: the flavor split means a bare `build apk` produces
-    # app-daily-release.apk and then fails looking for app-release.apk.
-    # CI runs the same line; a gate that builds differently is not a gate.
-    log "flutter build apk --release --flavor daily"
-    flutter build apk --release --flavor daily
-
-    echo "CI mirror passed."
+    echo "CI mirror ${1:-all} passed."
 }
 
 main "$@"
