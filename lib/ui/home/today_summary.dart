@@ -60,38 +60,42 @@ class TodaySummary extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              current.checkOut == null
-                  ? 'In ${clockLabel(current.checkIn)}'
-                  : 'In ${clockLabel(current.checkIn)} · '
-                        'Out ${clockLabel(current.checkOut!)}',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: AppTextSize.body,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            if (target != null)
+        // Flexible: on a narrow phone the line wraps rather than overflowing
+        // the Undo button beside it.
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
               Text(
-                'Until ${clockLabel(target!.checkOutAt)} '
-                '(${durationLabel(target!.share)})',
+                current.checkOut == null
+                    ? 'In ${clockLabel(current.checkIn)}'
+                    : 'In ${clockLabel(current.checkIn)} · '
+                          'Out ${clockLabel(current.checkOut!)}',
                 style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: AppTextSize.label,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: AppTextSize.body,
                 ),
               ),
-            Text(
-              durationLabel(total),
-              style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontSize: AppTextSize.subtitle,
-                fontWeight: FontWeight.w700,
+              const SizedBox(height: AppSpacing.xs),
+              if (target != null)
+                Text(
+                  'Until ${clockLabel(target!.checkOutAt)} '
+                  '(${durationLabel(target!.share)})',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: AppTextSize.label,
+                  ),
+                ),
+              Text(
+                durationLabel(total),
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontSize: AppTextSize.subtitle,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         if (onUndo != null)
           TextButton(onPressed: onUndo, child: const Text('Undo')),

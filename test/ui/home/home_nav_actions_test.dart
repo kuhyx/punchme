@@ -77,7 +77,7 @@ void main() {
 
     await tester.tap(find.byTooltip('History'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('2026-08-25'));
+    await tester.tap(find.byKey(const ValueKey<String>('day-2026-08-25')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();

@@ -9,9 +9,12 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
 import 'package:punchme/ui/history/day_editor.dart';
-import 'package:punchme/ui/home/today_summary.dart';
+import 'package:punchme/ui/history/month_grid.dart';
 
-/// Lists recorded days, newest first, and edits them.
+/// Height kept free under the grid for the floating add button.
+const double _fabClearance = 80;
+
+/// Shows recorded days a month at a time, and edits them.
 class HistoryScreen extends StatefulWidget {
   /// Creates the history screen backed by [repository].
   const HistoryScreen({
@@ -33,6 +36,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<DayEntry> _days = <DayEntry>[];
   bool _loading = true;
+  late DateTime _month = DateTime(widget.now().year, widget.now().month);
 
   @override
   void initState() {
@@ -46,7 +50,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return;
     }
     setState(() {
-      _days = days.reversed.toList();
+      _days = days;
       _loading = false;
     });
   }
@@ -76,55 +80,67 @@ class _HistoryScreenState extends State<HistoryScreen> {
     await _edit(DayEntry(dateKey: localDateKey(start), checkIn: start));
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('History')),
-    floatingActionButton: FloatingActionButton(
-      onPressed: _addMissingDay,
-      tooltip: 'Add a missing day',
-      child: const Icon(Icons.add),
-    ),
-    body: _loading
-        ? const Center(child: CircularProgressIndicator())
-        : _days.isEmpty
-        ? const Center(child: Text('No days recorded yet'))
-        : ListView.builder(
-            itemCount: _days.length,
-            itemBuilder: (context, index) =>
-                _DayTile(entry: _days[index], onTap: () => _edit(_days[index])),
-          ),
-  );
-}
-
-/// One row in the history list.
-class _DayTile extends StatelessWidget {
-  const _DayTile({required this.entry, required this.onTap});
-
-  final DayEntry entry;
-  final VoidCallback onTap;
+  /// Moves the shown month by [delta] months.
+  void _shift(int delta) =>
+      setState(() => _month = DateTime(_month.year, _month.month + delta));
 
   @override
   Widget build(BuildContext context) {
-    final worked = entry.worked;
-    final checkOut = entry.checkOut;
-    return ListTile(
-      title: Text(entry.dateKey),
-      subtitle: Text(
-        checkOut == null
-            ? '${clockLabel(entry.checkIn)} — missing check-out'
-            : '${clockLabel(entry.checkIn)} – ${clockLabel(checkOut)}',
+    final current = widget.now();
+    final atLatest = !_month.isBefore(DateTime(current.year, current.month));
+    return Scaffold(
+      appBar: AppBar(title: const Text('History')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addMissingDay,
+        tooltip: 'Add a missing day',
+        child: const Icon(Icons.add),
       ),
-      trailing: Text(
-        worked == null ? '—' : durationLabel(worked),
-        style: TextStyle(
-          color: worked == null
-              ? Theme.of(context).colorScheme.onSurfaceVariant
-              : Theme.of(context).colorScheme.primary,
-          fontSize: AppTextSize.body,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      onTap: onTap,
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _days.isEmpty
+          ? const Center(child: Text('No days recorded yet'))
+          : Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () => _shift(-1),
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          localDateKey(_month).substring(0, 7),
+                          style: const TextStyle(
+                            fontSize: AppTextSize.title,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: atLatest ? null : () => _shift(1),
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  // Clear of the add button, which floats over the grid.
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: _fabClearance),
+                    child: MonthGrid(
+                      month: _month,
+                      entries: <String, DayEntry>{
+                        for (final day in _days) day.dateKey: day,
+                      },
+                      onTap: _edit,
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -26,22 +26,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Finder cell(String key) => find.byKey(ValueKey<String>('day-$key'));
+
   group('listing', () {
     testWidgets('says so when nothing is recorded', (tester) async {
       await pump(tester, FakeDayRepository());
       expect(find.text('No days recorded yet'), findsOneWidget);
     });
 
-    testWidgets('lists a recorded day with its times and total', (
-      tester,
-    ) async {
+    testWidgets('shows the current month with a day total', (tester) async {
       await pump(
         tester,
         FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
       );
-      expect(find.text('2026-08-24'), findsOneWidget);
-      expect(find.text('09:00 – 17:00'), findsOneWidget);
-      expect(find.text('8h 00m'), findsOneWidget);
+      expect(find.text('2026-08'), findsOneWidget);
+      expect(
+        find.descendant(of: cell('2026-08-24'), matching: find.text('8h 00m')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('flags a forgotten check-out instead of guessing', (
@@ -55,20 +57,51 @@ void main() {
           ],
         ),
       );
-      expect(find.textContaining('missing check-out'), findsOneWidget);
-      expect(find.text('—'), findsOneWidget);
+      expect(
+        find.descendant(of: cell('2026-08-24'), matching: find.text('—')),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('shows the newest day first', (tester) async {
+    testWidgets('unrecorded days do not open an editor', (tester) async {
+      await pump(
+        tester,
+        FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
+      );
+      await tester.tap(cell('2026-08-23'));
+      await tester.pumpAndSettle();
+      expect(find.text('Check in'), findsNothing);
+    });
+  });
+
+  group('months', () {
+    testWidgets('steps back and forward', (tester) async {
       await pump(
         tester,
         FakeDayRepository(
-          days: <DayEntry>[closed('2026-08-24'), closed('2026-08-25')],
+          days: <DayEntry>[closed('2026-07-30'), closed('2026-08-24')],
         ),
       );
-      final first = tester.getTopLeft(find.text('2026-08-25'));
-      final second = tester.getTopLeft(find.text('2026-08-24'));
-      expect(first.dy, lessThan(second.dy));
+      await tester.tap(find.byIcon(Icons.chevron_left));
+      await tester.pumpAndSettle();
+      expect(find.text('2026-07'), findsOneWidget);
+      expect(cell('2026-07-30'), findsOneWidget);
+      expect(cell('2026-08-24'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pumpAndSettle();
+      expect(find.text('2026-08'), findsOneWidget);
+    });
+
+    testWidgets('cannot step past the current month', (tester) async {
+      await pump(
+        tester,
+        FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
+      );
+      final next = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.chevron_right),
+      );
+      expect(next.onPressed, isNull);
     });
   });
 
@@ -79,7 +112,7 @@ void main() {
         FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
       );
 
-      await tester.tap(find.text('2026-08-24'));
+      await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
 
       expect(find.text('Check in'), findsOneWidget);
@@ -91,7 +124,7 @@ void main() {
       final repo = FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]);
       await pump(tester, repo);
 
-      await tester.tap(find.text('2026-08-24'));
+      await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -104,7 +137,7 @@ void main() {
       final repo = FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]);
       await pump(tester, repo);
 
-      await tester.tap(find.text('2026-08-24'));
+      await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
@@ -116,7 +149,7 @@ void main() {
       final repo = FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]);
       await pump(tester, repo);
 
-      await tester.tap(find.text('2026-08-24'));
+      await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Delete'));
       await tester.pumpAndSettle();
@@ -174,7 +207,7 @@ void main() {
       final repo = FakeDayRepository(days: <DayEntry>[stale]);
       await pump(tester, repo);
 
-      await tester.tap(find.text('2026-08-23'));
+      await tester.tap(cell('2026-08-23'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();

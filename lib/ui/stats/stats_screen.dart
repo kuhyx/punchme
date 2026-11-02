@@ -64,6 +64,18 @@ class _StatsScreenState extends State<StatsScreen> {
     now: widget.now(),
   );
 
+  DateTime _periodStart(Horizon horizon, DateTime now) => switch (horizon) {
+    Horizon.week => startOfWeek(now),
+    Horizon.month => startOfMonth(now),
+    Horizon.year => startOfYear(now),
+  };
+
+  DateTime _periodEnd(Horizon horizon, DateTime now) => switch (horizon) {
+    Horizon.week => endOfWeek(now),
+    Horizon.month => endOfMonth(now),
+    Horizon.year => endOfYear(now),
+  };
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -72,27 +84,39 @@ class _StatsScreenState extends State<StatsScreen> {
     final now = widget.now();
     return Scaffold(
       appBar: AppBar(title: const Text('Statistics')),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: <Widget>[
-          BalanceCard(
-            title: Horizon.week.title,
-            balance: _balanceFor(startOfWeek(now), endOfWeek(now)),
-            infoOnly: !_settings.countedHorizons.contains(Horizon.week),
+      // Scaled down to fit rather than scrolled: the three cards always
+      // share one screen, whatever the text size.
+      body: LayoutBuilder(
+        builder: (context, box) => FittedBox(
+          alignment: Alignment.topCenter,
+          fit: BoxFit.scaleDown,
+          child: SizedBox(
+            width: box.maxWidth,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  for (final horizon in <Horizon>[
+                    Horizon.week,
+                    Horizon.month,
+                    Horizon.year,
+                  ]) ...<Widget>[
+                    BalanceCard(
+                      title: horizon.title,
+                      balance: _balanceFor(
+                        _periodStart(horizon, now),
+                        _periodEnd(horizon, now),
+                      ),
+                      infoOnly: !_settings.countedHorizons.contains(horizon),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          BalanceCard(
-            title: Horizon.month.title,
-            balance: _balanceFor(startOfMonth(now), endOfMonth(now)),
-            infoOnly: !_settings.countedHorizons.contains(Horizon.month),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          BalanceCard(
-            title: Horizon.year.title,
-            balance: _balanceFor(startOfYear(now), endOfYear(now)),
-            infoOnly: !_settings.countedHorizons.contains(Horizon.year),
-          ),
-        ],
+        ),
       ),
     );
   }
