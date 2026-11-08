@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.16+1
+version: 1.0.17+1
 
 environment:
   sdk: ^3.12.2
@@ -39,7 +39,7 @@ dependencies:
   data_transfer_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: data_transfer_flutter-v0.2.0
+      ref: data_transfer_flutter-v0.2.1
       path: data_transfer_flutter
 
   # Owns the frozen palette and the theme builders. There is deliberately no
@@ -57,6 +57,11 @@ dependencies:
   # the seam it exposes so a test can stand in for the keystore, which
   # `depend_on_referenced_packages` requires be an explicit dependency.
   flutter_secure_storage: 11.2.0
+
+  # Android sign-in implementation: without it GoogleSignInPlatform.instance
+  # throws UnimplementedError. Not the app-facing google_sign_in, which would
+  # also register the web plugin.
+  google_sign_in_android: 7.2.18
 
   # Direct, not transitive: the connect tile drives the account picker
   # through GoogleSignInPlatform rather than the GoogleSignIn facade. The
