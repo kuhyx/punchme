@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.15+1
+version: 1.0.16+1
 
 environment:
   sdk: ^3.12.2
@@ -21,7 +21,7 @@ dependencies:
   crdt_sync:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_dart-v0.11.3
+      ref: crdt_sync_dart-v0.12.0
       path: crdt_sync_dart
 
   # Cross-device sync: the shared CRDT log plus the Flutter-side glue
@@ -31,7 +31,7 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.3.5
+      ref: crdt_sync_flutter-v0.5.0
       path: crdt_sync_flutter
 
   # Export plumbing: Save-as picker (never share-only), shared with the other
@@ -47,7 +47,7 @@ dependencies:
   design_system:
     git:
       url: https://github.com/kuhyx/utils
-      ref: design_system-v0.3.0
+      ref: design_system-v0.3.1
       path: design_system
 
   flutter:
@@ -73,7 +73,7 @@ dependencies:
   # Tap-to-clock. 4.x splits NDEF into its own package and is pigeon-backed,
   # which is what lets the host suite exercise the real calls over a mocked
   # channel instead of stubbing them out behind a coverage suppression.
-  nfc_manager: 4.2.1
+  nfc_manager: 4.3.0
   nfc_manager_ndef: 1.1.0
 
   path: 1.9.1
