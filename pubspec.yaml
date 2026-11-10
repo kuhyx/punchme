@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.18+1
+version: 1.0.19+1
 
 environment:
   sdk: ^3.12.2
@@ -58,17 +58,13 @@ dependencies:
   # `depend_on_referenced_packages` requires be an explicit dependency.
   flutter_secure_storage: 11.2.0
 
-  # Android sign-in implementation: without it GoogleSignInPlatform.instance
-  # throws UnimplementedError. Not the app-facing google_sign_in, which would
-  # also register the web plugin.
-  google_sign_in_android: 7.2.18
-
-  # Direct, not transitive: the connect tile drives the account picker
-  # through GoogleSignInPlatform rather than the GoogleSignIn facade. The
-  # platform instance is settable, so a hand-written fake lets the suite reach
-  # the refusal branches -- the facade's channel would force a coverage
-  # suppression over exactly the code this fix is about.
-  google_sign_in_platform_interface: 3.1.0
+  # One-tap sign-in for the sync account: AccountManager chooser, no Play
+  # Services SDK in the APK.
+  google_account_token:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: google_account_token-v0.1.0
+      path: google_account_token
 
   # Direct, not transitive: the sync tile names `http.Client` in the seam it
   # exposes so a test can stand in for the Firebase token exchange, which

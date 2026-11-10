@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 import 'package:crdt_sync_flutter/testing/fake_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/testing.dart' as http_testing;
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/sync_actions.dart';
 
-import 'fake_google_sign_in.dart';
+import 'fake_account_token.dart';
 
 /// Drives the production defaults rather than an injected stub.
 ///
@@ -18,6 +18,8 @@ import 'fake_google_sign_in.dart';
 /// injected fake proves the widget works; these prove it is actually plugged
 /// into the shared sync library.
 void main() {
+  tearDown(resetFakeAccountToken);
+
   // These drive the production defaults rather than an injected stub, so
   // the wiring to the shared library is covered too -- an injected fake
   // proves the widget works, not that it is plugged into anything.
@@ -40,50 +42,35 @@ void main() {
     expect(await probeSyncSession(), isFalse);
   });
 
-  testWidgets('connectSyncAccount reports a dismissed picker', (tester) async {
+  test('connectSyncAccount reports a dismissed picker', () async {
     installFakeSecureStorage();
+    fakeAccountToken(null);
 
-    final status = await connectSyncAccount(
-      platform: FakeGoogleSignIn(
-        error: const GoogleSignInException(
-          code: GoogleSignInExceptionCode.canceled,
-        ),
-      ),
-    );
+    final status = await connectSyncAccount();
 
     // Cancelling stays quiet; it must not read as a failure.
     expect(status, GoogleSignInStatus.cancelled);
   });
 
-  testWidgets('connectSyncAccount throws when Google refuses', (tester) async {
+  test('connectSyncAccount throws where there is no sign-in flow', () async {
     installFakeSecureStorage();
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
 
-    // The on-device failure: the picker opened, the account was chosen, and
-    // Google refused because the client is not registered. Previously this
-    // returned the same value as a cancel and the user saw nothing at all.
     await expectLater(
-      connectSyncAccount(
-        platform: FakeGoogleSignIn(
-          error: const GoogleSignInException(
-            code: GoogleSignInExceptionCode.clientConfigurationError,
-            description: 'UNREGISTERED_ON_API_CONSOLE',
-          ),
-        ),
-      ),
+      connectSyncAccount(),
       throwsA(
         isA<GoogleSignInRefused>().having(
           (error) => error.toString(),
           'reason',
-          contains('UNREGISTERED_ON_API_CONSOLE'),
+          contains('no Google sign-in flow'),
         ),
       ),
     );
   });
 
-  testWidgets('connectSyncAccount is true once Firebase accepts the token', (
-    tester,
-  ) async {
+  test('connectSyncAccount is true once Firebase accepts the token', () async {
     installFakeSecureStorage();
+    fakeAccountToken('a-google-id-token');
     // Stands in for identitytoolkit: the shape `signInWithIdp` expects.
     final firebase = http_testing.MockClient(
       (_) async => http.Response(
@@ -98,20 +85,16 @@ void main() {
       ),
     );
 
-    final connected = await connectSyncAccount(
-      platform: FakeGoogleSignIn(result: googleResult('a-google-id-token')),
-      httpClient: firebase,
-    );
+    final connected = await connectSyncAccount(httpClient: firebase);
 
     expect(connected, GoogleSignInStatus.succeeded);
     // The session is durable now, so the probe agrees.
     expect(await probeSyncSession(), isTrue);
   });
 
-  testWidgets('connectSyncAccount rejects the wrong Google account', (
-    tester,
-  ) async {
+  test('connectSyncAccount rejects the wrong Google account', () async {
     installFakeSecureStorage();
+    fakeAccountToken('a-google-id-token');
     final firebase = http_testing.MockClient(
       (_) async => http.Response(
         jsonEncode(<String, dynamic>{
@@ -127,10 +110,7 @@ void main() {
     // Signing in as the wrong account must fail loudly: it would otherwise
     // authenticate fine and then be denied every read and write.
     await expectLater(
-      connectSyncAccount(
-        platform: FakeGoogleSignIn(result: googleResult('a-google-id-token')),
-        httpClient: firebase,
-      ),
+      connectSyncAccount(httpClient: firebase),
       throwsA(isA<Exception>()),
     );
     expect(await probeSyncSession(), isFalse);

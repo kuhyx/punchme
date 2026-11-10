@@ -6,16 +6,15 @@ import 'dart:async';
 import 'package:crdt_sync_flutter/crdt_sync_flutter.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
 
 /// The project's **Web** OAuth client id.
 ///
-/// Web, not Android: `google_sign_in` wants the server client id, and hands
-/// back an id token minted for it. Shared with the sibling apps because they
-/// all sign in to the same `kuhy-syncs` project.
+/// Web, not Android: `google_account_token` wants the server client id, and
+/// hands back an id token minted for it. Shared with the sibling apps because
+/// they all sign in to the same `kuhy-syncs` project.
 const String kServerClientId =
     '845446124781-prdoherj0v64vc6egvvcp3l0693khaur.apps.googleusercontent.com';
 
@@ -39,17 +38,10 @@ Future<bool> probeSyncSession() => isSyncConfigured(kSyncApp);
 /// reason attached, because the previous version returned the same `false`
 /// for both and left the user tapping a tile that did nothing.
 ///
-/// [platform] replaces the account picker, which reaches a platform channel
-/// `flutter test` has no host for; [httpClient] replaces the Firebase token
-/// exchange. Both default to the real thing.
-Future<GoogleSignInStatus> connectSyncAccount({
-  GoogleSignInPlatform? platform,
-  http.Client? httpClient,
-}) async {
-  final attempt = await googleSignInAttempt(
-    serverClientId: kServerClientId,
-    platform: platform,
-  );
+/// [httpClient] replaces the Firebase token exchange and defaults to the
+/// real one.
+Future<GoogleSignInStatus> connectSyncAccount({http.Client? httpClient}) async {
+  final attempt = await googleSignInAttempt(serverClientId: kServerClientId);
   if (attempt.status != GoogleSignInStatus.succeeded) {
     if (attempt.status == GoogleSignInStatus.failed) {
       throw GoogleSignInRefused(attempt.detail!);

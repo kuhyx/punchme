@@ -1,18 +1,13 @@
 /// Raising the Google picker, and saying which of three things happened.
 ///
-/// This exists because the shared library cannot answer the question. Its
-/// `googleIdToken` collapses every `GoogleSignInException` into null, so a
-/// dismissed picker and an OAuth client Google has never heard of arrive at
-/// the caller as the same value -- which is exactly how tapping "Connect"
-/// came to do nothing visible on a device whose client was unregistered.
-///
-/// The plugin is driven through [GoogleSignInPlatform] rather than the
-/// `GoogleSignIn` facade so that the failure branches are reachable from
-/// `flutter test`: the platform instance is settable, the facade's channel is
-/// not. That keeps this file honestly covered instead of suppressed.
+/// `google_account_token` returns null for a dismissed chooser and for a
+/// failed token request alike (it logs the failure), so on Android a null is
+/// reported as a cancel. What stays distinct is the platform with no
+/// AccountManager at all: there the attempt fails with a reason the user sees,
+/// as it did before the plugin swap.
 library;
 
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
+import 'package:google_account_token/google_account_token.dart' as plugin;
 
 /// Which of the three outcomes a sign-in attempt reached.
 enum GoogleSignInStatus {
@@ -54,52 +49,22 @@ class GoogleSignInResult {
   final String? detail;
 }
 
-/// Turns a plugin exception into one of the three outcomes.
-///
-/// Only [GoogleSignInExceptionCode.canceled] with nothing attached counts as a
-/// cancel. That narrowness is deliberate and was the second half of this bug:
-/// on Android's Credential Manager an unregistered client can surface as a
-/// cancel-shaped code, so treating the code alone as "the user changed their
-/// mind" would hide the misconfiguration all over again. Anything carrying a
-/// description or details is Google explaining a refusal, and is reported.
-GoogleSignInResult classifyGoogleFailure(GoogleSignInException error) {
-  final described = error.description ?? '';
-  if (error.code == GoogleSignInExceptionCode.canceled &&
-      described.isEmpty &&
-      error.details == null) {
-    return const GoogleSignInResult.cancelled();
-  }
-  final details = error.details == null ? '' : ' (${error.details})';
-  return GoogleSignInResult.failed('${error.code.name}: $described$details');
-}
-
-/// Raises the account picker and reports what came back.
+/// Raises the account chooser and reports what came back.
 ///
 /// [serverClientId] must be the project's **Web** client id; Android has to
 /// request a token minted for it, and an Android client id yields a token
 /// Firebase rejects as an audience mismatch.
 Future<GoogleSignInResult> googleSignInAttempt({
   required String serverClientId,
-  GoogleSignInPlatform? platform,
 }) async {
-  final google = platform ?? GoogleSignInPlatform.instance;
-  try {
-    await google.init(InitParameters(serverClientId: serverClientId));
-    if (!google.supportsAuthenticate()) {
-      return const GoogleSignInResult.failed(
-        'this build of Android has no Google sign-in flow available',
-      );
-    }
-    final results = await google.authenticate(const AuthenticateParameters());
-    final token = results.authenticationTokens.idToken;
-    if (token == null) {
-      // Signed in, but with no ID token there is nothing to hand Firebase.
-      return const GoogleSignInResult.failed(
-        'Google returned an account but no ID token',
-      );
-    }
-    return GoogleSignInResult.succeeded(token);
-  } on GoogleSignInException catch (error) {
-    return classifyGoogleFailure(error);
+  if (!plugin.googleAccountTokenSupported) {
+    return const GoogleSignInResult.failed(
+      'this platform has no Google sign-in flow available',
+    );
   }
+  final token = await plugin.googleIdToken(serverClientId: serverClientId);
+  if (token == null) {
+    return const GoogleSignInResult.cancelled();
+  }
+  return GoogleSignInResult.succeeded(token);
 }
