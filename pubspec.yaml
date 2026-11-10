@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.17+1
+version: 1.0.18+1
 
 environment:
   sdk: ^3.12.2
@@ -21,7 +21,7 @@ dependencies:
   crdt_sync:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_dart-v0.12.0
+      ref: crdt_sync_dart-v0.12.1
       path: crdt_sync_dart
 
   # Cross-device sync: the shared CRDT log plus the Flutter-side glue
@@ -31,7 +31,7 @@ dependencies:
   crdt_sync_flutter:
     git:
       url: https://github.com/kuhyx/utils
-      ref: crdt_sync_flutter-v0.5.0
+      ref: crdt_sync_flutter-v0.5.1
       path: crdt_sync_flutter
 
   # Export plumbing: Save-as picker (never share-only), shared with the other
