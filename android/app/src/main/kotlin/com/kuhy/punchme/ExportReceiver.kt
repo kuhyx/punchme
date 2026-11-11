@@ -1,5 +1,7 @@
 package com.kuhy.punchme
 
+// phone-slot: not-shared-storage (every file is under the per-package getExternalFilesDir).
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent

@@ -1,3 +1,4 @@
+// phone-slot: not-shared-storage (only comments name /sdcard; files go to the per-package getExternalFilesDir).
 /// Exporting this device's Firebase session, on explicit request.
 ///
 /// **This writes the shared `kuhy-syncs` refresh token to external storage.**
