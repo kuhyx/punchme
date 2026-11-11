@@ -19,6 +19,10 @@ readonly SERIAL="${ADB_SERIAL:-23181JEGR08034}"
 readonly HEALTH_EXIT=50
 # Ship and systemd-run do not source ~/.zshenv, where ANDROID_HOME lives;
 # without it phone_deploy cannot find apksigner and refuses (exit 41).
+# Outside a Claude session each phone_lease call falls back to its own
+# pid:<n> owner, so phone_deploy's launch step blocked on phone_deploy's own
+# package lease (exit 35). One owner for the whole run fixes that.
+export PHONE_LEASE_OWNER="${PHONE_LEASE_OWNER:-deploy:punchme:$$}"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/sdk/foss-android-sdk}"
 # phone_deploy refuses (exit 48) above PHONE_DEPLOY_MAX_LOAD; Ship runs this
 # right after a push, often while other builds still load the box, so wait
