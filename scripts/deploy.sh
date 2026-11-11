@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # ============================================================================
-# Deploy punchme for real: fast-forward kuhy's checkout, release-build the
+# Deploy punchme for real (the CLAUDE.md deploy line pulls ~/src/punchme
+# with --ff-only first; one network step, not two): release-build the
 # shipping (daily) flavor, install it over the existing app on the Pixel and
 # launch it. phone_deploy.sh never uninstalls or clears data and exits
 # non-zero on any device, whitelist, signing or install problem. The health
@@ -17,7 +18,6 @@ readonly PKG="com.kuhy.punchme"
 readonly SERIAL="${ADB_SERIAL:-23181JEGR08034}"
 readonly HEALTH_EXIT=50
 
-git -C "$REPO" pull --ff-only
 ADB_SERIAL="$SERIAL" bash "$HOME/.claude/scripts/phone_deploy.sh" "$REPO" --release --flavor daily
 
 pid=$(adb -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' || true)
