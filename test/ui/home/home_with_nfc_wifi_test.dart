@@ -59,6 +59,6 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
 
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 }

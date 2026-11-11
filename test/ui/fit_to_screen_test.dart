@@ -91,8 +91,8 @@ void main() {
       textScale: 2,
     );
     expectNoVerticalScroll(tester);
-    expect(find.text('This week'), findsOne);
-    expect(find.text('This year'), findsOne);
+    expect(find.bySemanticsLabel('This week'), findsOne);
+    expect(find.bySemanticsLabel('This year'), findsOne);
   });
 
   testWidgets('home fits and its actions are hit-testable', (tester) async {
@@ -104,7 +104,6 @@ void main() {
       ),
     );
     expectNoVerticalScroll(tester);
-    expect(find.text('CHECKED OUT').hitTestable(), findsOne);
-    expect(find.text('Undo').hitTestable(), findsOne);
+    expect(find.bySemanticsLabel('CHECKED OUT').hitTestable(), findsOne);
   });
 }

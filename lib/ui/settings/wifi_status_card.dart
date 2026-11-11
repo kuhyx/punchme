@@ -4,6 +4,7 @@ library;
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show MissingPluginException;
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 import 'package:punchme/wifi/wifi_observation_store.dart';
 
@@ -85,7 +86,12 @@ class _WifiStatusCardState extends State<WifiStatusCard> {
   @override
   Widget build(BuildContext context) {
     if (!widget.armed) {
-      return const Text('Add a network above to turn this on.');
+      return Icon(
+        Icons.wifi_off_outlined,
+        size: 64,
+        color: Theme.of(context).colorScheme.outline,
+        semanticLabel: 'Add a network above to turn this on.',
+      );
     }
     return FutureBuilder<_WifiStatusSnapshot>(
       future: _future,
@@ -100,35 +106,54 @@ class _WifiStatusCardState extends State<WifiStatusCard> {
           children: <Widget>[
             _statusRow(
               context,
+              Icons.location_on_outlined,
               'Location permission',
               permission.locationGranted,
             ),
             _statusRow(
               context,
+              Icons.notifications_outlined,
               'Notification permission',
               permission.notificationGranted,
             ),
             _statusRow(
               context,
+              Icons.wifi_find,
               'Watching for Wi-Fi',
               permission.serviceRunning,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              data.lastSeen == null
-                  ? 'Not seen on a work network yet'
-                  : 'Last seen at work: ${_formatted(data.lastSeen!)}',
-            ),
+            if (data.lastSeen == null)
+              const Icon(
+                Icons.history_toggle_off,
+                key: Key('wifi-never-seen'),
+                semanticLabel: 'Not seen on a work network yet',
+              )
+            else
+              IconValue(
+                key: const Key('wifi-last-seen'),
+                icon: Icons.history,
+                value: _formatted(data.lastSeen!),
+                spoken: 'Last seen at work: ${_formatted(data.lastSeen!)}',
+              ),
           ],
         );
       },
     );
   }
 
-  Widget _statusRow(BuildContext context, String label, bool ok) => Padding(
+  Widget _statusRow(
+    BuildContext context,
+    IconData what,
+    String spoken,
+    bool ok,
+  ) => Padding(
     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
     child: Row(
+      key: Key('wifi-status-$spoken'),
       children: <Widget>[
+        Icon(what, semanticLabel: spoken),
+        const SizedBox(width: AppSpacing.sm),
         Icon(
           ok ? Icons.check_circle : Icons.error,
           size: AppTextSize.body,
@@ -136,8 +161,6 @@ class _WifiStatusCardState extends State<WifiStatusCard> {
               ? context.statusColors.success
               : context.statusColors.danger,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text(label)),
       ],
     ),
   );

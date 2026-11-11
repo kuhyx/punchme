@@ -34,13 +34,13 @@ void main() {
   }
 
   Future<void> addCurrent(WidgetTester tester) async {
-    await tester.tap(find.text('Add current network'));
+    await tester.tap(find.bySemanticsLabel('Add current network'));
     await tester.pumpAndSettle();
   }
 
   testWidgets('says so when there are none', (tester) async {
     await pump(tester);
-    expect(find.text('No work Wi-Fi networks yet'), findsOneWidget);
+    expect(find.bySemanticsLabel('No work Wi-Fi networks yet'), findsOneWidget);
   });
 
   testWidgets('offers no free-text entry', (tester) async {
@@ -71,8 +71,8 @@ void main() {
     await pump(tester, picker: fakePicker(ssid: null));
     await addCurrent(tester);
     expect(changes, isEmpty);
-    expect(find.text(kNotOnWifiMessage), findsOneWidget);
-    expect(find.text('Open app settings'), findsNothing);
+    expect(find.bySemanticsLabel(kNotOnWifiMessage), findsOneWidget);
+    expect(find.byKey(const Key('onboarding-settings')), findsNothing);
   });
 
   testWidgets('a refusal explains and offers app settings', (tester) async {
@@ -81,9 +81,9 @@ void main() {
       picker: fakePicker(granted: false, requestGrants: false),
     );
     await addCurrent(tester);
-    expect(find.text(kLocationDeniedMessage), findsOneWidget);
+    expect(find.bySemanticsLabel(kLocationDeniedMessage), findsOneWidget);
 
-    await tester.tap(find.text('Open app settings'));
+    await tester.tap(find.byKey(const Key('wifi-open-settings')));
     expect(settingsOpened, 1);
   });
 
@@ -94,8 +94,8 @@ void main() {
     );
     await addCurrent(tester);
     expect(changes, isEmpty);
-    expect(find.text(kLocationDeniedMessage), findsNothing);
-    expect(find.text(kNotOnWifiMessage), findsNothing);
+    expect(find.bySemanticsLabel(kLocationDeniedMessage), findsNothing);
+    expect(find.bySemanticsLabel(kNotOnWifiMessage), findsNothing);
   });
 
   testWidgets('deleting a chip removes that network', (tester) async {

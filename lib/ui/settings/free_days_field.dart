@@ -119,21 +119,30 @@ class _FreeDaysFieldState extends State<FreeDaysField> {
         Row(
           children: <Widget>[
             IconButton(
-              icon: const Icon(Icons.chevron_left),
-              tooltip: 'Previous month',
+              key: const Key('month-prev'),
+              icon: const Icon(
+                Icons.chevron_left,
+                semanticLabel: 'Previous month',
+              ),
               onPressed: canShowMonth(previous, now) ? () => _step(-1) : null,
             ),
             Expanded(
               child: Center(
+                // Numeric, as History shows months; the name is spoken only.
                 child: Text(
-                  '${monthLabels[_month.month - 1]} ${_month.year}',
+                  '${_month.year}-${_month.month.toString().padLeft(2, '0')}',
+                  semanticsLabel:
+                      '${monthLabels[_month.month - 1]} ${_month.year}',
                   style: const TextStyle(fontSize: AppTextSize.body),
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.chevron_right),
-              tooltip: 'Next month',
+              key: const Key('month-next'),
+              icon: const Icon(
+                Icons.chevron_right,
+                semanticLabel: 'Next month',
+              ),
               onPressed: canShowMonth(next, now) ? () => _step(1) : null,
             ),
           ],
@@ -148,7 +157,12 @@ class _FreeDaysFieldState extends State<FreeDaysField> {
         // The grid shows one month; the chips are the whole inventory, so a
         // free day in another month is still visible and removable.
         if (sorted.isEmpty)
-          const Text('No free days yet')
+          Icon(
+            Icons.event_note_outlined,
+            size: 64,
+            color: Theme.of(context).colorScheme.outline,
+            semanticLabel: 'No free days yet',
+          )
         else
           Wrap(
             spacing: AppSpacing.sm,

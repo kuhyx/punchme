@@ -211,7 +211,6 @@ class _HomeScreenState extends State<HomeScreen>
     final state = stateFor(today);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('punchme'),
         actions: <Widget>[
           HomeNavActions(
             repository: widget.repository,

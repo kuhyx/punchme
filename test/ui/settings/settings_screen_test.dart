@@ -4,6 +4,7 @@ import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/settings_screen.dart';
+import 'package:punchme/ui/settings/weekday_picker.dart';
 
 import '../../support/fake_day_repository.dart';
 
@@ -65,7 +66,7 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.byTooltip('More'));
+      await tester.tap(find.bySemanticsLabel('More'));
       await tester.pumpAndSettle();
 
       expect(find.text('8h 30m'), findsOneWidget);
@@ -79,7 +80,7 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.byTooltip('Less'));
+      await tester.tap(find.bySemanticsLabel('Less'));
       await tester.pumpAndSettle();
 
       expect(find.text('7h 30m'), findsOneWidget);
@@ -90,7 +91,13 @@ void main() {
     testWidgets('shows every weekday as a chip', (tester) async {
       await pump(tester, FakeDayRepository());
       for (final label in <String>['Mon', 'Fri', 'Sat', 'Sun']) {
-        expect(find.text(label), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(WeekdayPicker),
+            matching: find.bySemanticsLabel(label),
+          ),
+          findsOneWidget,
+        );
       }
     });
 
@@ -98,7 +105,12 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.text('Mon'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(WeekdayPicker),
+          matching: find.bySemanticsLabel('Mon'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -111,7 +123,12 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.text('Sat'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(WeekdayPicker),
+          matching: find.bySemanticsLabel('Sat'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -124,7 +141,7 @@ void main() {
   group('free days', () {
     testWidgets('says so when there are none', (tester) async {
       await pump(tester, FakeDayRepository());
-      expect(find.text('No free days yet'), findsOneWidget);
+      expect(find.byIcon(Icons.event_note_outlined), findsOneWidget);
     });
 
     testWidgets('lists existing free days', (tester) async {
@@ -197,8 +214,8 @@ void main() {
 
     testWidgets('CSV shares a .csv file with the header row', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
-      await scrollTo(tester, find.text('CSV'));
-      await tester.tap(find.text('CSV'));
+      await scrollTo(tester, find.bySemanticsLabel('CSV'));
+      await tester.tap(find.bySemanticsLabel('CSV'));
       await tester.pumpAndSettle();
 
       expect(shared.single.fileName, 'punchme.csv');
@@ -208,8 +225,8 @@ void main() {
 
     testWidgets('JSON shares a .json file with the days', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
-      await scrollTo(tester, find.text('JSON'));
-      await tester.tap(find.text('JSON'));
+      await scrollTo(tester, find.bySemanticsLabel('JSON'));
+      await tester.tap(find.bySemanticsLabel('JSON'));
       await tester.pumpAndSettle();
 
       expect(shared.single.fileName, 'punchme.json');
@@ -218,8 +235,8 @@ void main() {
 
     testWidgets('Calendar shares an .ics file with one event', (tester) async {
       await pump(tester, FakeDayRepository(days: days));
-      await scrollTo(tester, find.text('Calendar'));
-      await tester.tap(find.text('Calendar'));
+      await scrollTo(tester, find.bySemanticsLabel('Calendar'));
+      await tester.tap(find.bySemanticsLabel('Calendar'));
       await tester.pumpAndSettle();
 
       expect(shared.single.fileName, 'punchme.ics');

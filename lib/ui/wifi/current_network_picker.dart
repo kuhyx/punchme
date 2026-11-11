@@ -1,7 +1,7 @@
 /// Adding the Wi-Fi network the phone is on right now.
 library;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:punchme/ui/wifi/location_rationale.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 
@@ -36,6 +36,9 @@ class NetworkPick {
   static const NetworkPick notOnWifi = NetworkPick._(
     message: kNotOnWifiMessage,
   );
+
+  /// The pictogram for [message]: location refused, or no Wi-Fi at all.
+  IconData get icon => needsSettings ? Icons.location_off : Icons.wifi_off;
 
   /// The SSID read, when there was one.
   final String? ssid;

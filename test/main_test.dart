@@ -64,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('uses the shared design-system themes', (tester) async {

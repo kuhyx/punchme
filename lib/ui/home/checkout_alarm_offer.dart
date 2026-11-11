@@ -62,11 +62,17 @@ Future<TargetToday?> offerCheckOutAlarm({
     // rather than returning. The check-in is already saved by this point, so
     // a failed alarm must not take the whole flow down with it.
     try {
-      await setAlarm(at: target.checkOutAt, message: 'punchme: check out');
+      await setAlarm(at: target.checkOutAt, message: '');
     } on Exception catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not set the alarm')),
+          const SnackBar(
+            content: Icon(
+              Icons.error_outline,
+              key: Key('alarm-failed'),
+              semanticLabel: 'Could not set the alarm',
+            ),
+          ),
         );
       }
     }

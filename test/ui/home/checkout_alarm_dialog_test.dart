@@ -132,7 +132,63 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Work 8h 04m today, until 17:04.'), findsOneWidget);
-    expect(find.text('0h 04m behind this week — all today.'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Work 8h 04m today, until 17:04.'),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('0h 04m behind this week — all today.'),
+      findsOneWidget,
+    );
+  });
+
+  group('the reason row draws each case in pictograms', () {
+    Future<void> pumpReason(WidgetTester tester, TargetToday t) =>
+        tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: TargetReason(target: t)),
+          ),
+        );
+
+    testWidgets('on track is a single tick', (tester) async {
+      await pumpReason(tester, target());
+      expect(find.byKey(const Key('reason-on-track')), findsOneWidget);
+      expect(find.byKey(const Key('reason-amount')), findsNothing);
+    });
+
+    for (final (level, horizonDays) in <(DeficitLevel, String)>[
+      (DeficitLevel.week, '7'),
+      (DeficitLevel.month, '30'),
+      (DeficitLevel.year, '365'),
+    ]) {
+      testWidgets('behind on the ${level.name} card, capped', (tester) async {
+        await pumpReason(
+          tester,
+          target(
+            level: level,
+            deficit: const Duration(hours: 20),
+            spreadOver: 2,
+            uncovered: const Duration(hours: 1),
+          ),
+        );
+        expect(find.byIcon(Icons.trending_down), findsOneWidget);
+        expect(find.text(horizonDays), findsOneWidget);
+        expect(find.byKey(const Key('reason-cap')), findsOneWidget);
+      });
+    }
+
+    testWidgets('ahead with a capped surplus', (tester) async {
+      await pumpReason(
+        tester,
+        target(
+          surplus: const Duration(hours: 6),
+          tightest: Horizon.year,
+          surplusCapped: true,
+        ),
+      );
+      expect(find.byIcon(Icons.trending_up), findsOneWidget);
+      expect(find.text('365'), findsOneWidget);
+      expect(find.byKey(const Key('reason-cap')), findsOneWidget);
+    });
   });
 }

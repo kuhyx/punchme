@@ -127,42 +127,44 @@ void main() {
   group('month navigation', () {
     testWidgets('opens on the month containing today', (tester) async {
       await pump(tester, latest: () => null, record: (_) {});
-      expect(find.text('August 2026'), findsOneWidget);
+      expect(find.bySemanticsLabel('August 2026'), findsOneWidget);
     });
 
     testWidgets('steps back and forward a month', (tester) async {
       await pump(tester, latest: () => null, record: (_) {});
 
-      await tester.tap(find.byTooltip('Previous month'));
+      await tester.tap(find.bySemanticsLabel('Previous month'));
       await tester.pumpAndSettle();
-      expect(find.text('July 2026'), findsOneWidget);
+      expect(find.bySemanticsLabel('July 2026'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Next month'));
+      await tester.tap(find.bySemanticsLabel('Next month'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Next month'));
+      await tester.tap(find.bySemanticsLabel('Next month'));
       await tester.pumpAndSettle();
-      expect(find.text('September 2026'), findsOneWidget);
+      expect(find.bySemanticsLabel('September 2026'), findsOneWidget);
     });
 
     testWidgets('both arrows are live inside the window', (tester) async {
       await pump(tester, latest: () => null, record: (_) {});
-      IconButton arrow(String tooltip) => tester.widget<IconButton>(
-        find
-            .ancestor(
-              of: find.byTooltip(tooltip),
-              matching: find.byType(IconButton),
-            )
-            .first,
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const Key('month-prev')))
+            .onPressed,
+        isNotNull,
       );
-      expect(arrow('Previous month').onPressed, isNotNull);
-      expect(arrow('Next month').onPressed, isNotNull);
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const Key('month-next')))
+            .onPressed,
+        isNotNull,
+      );
     });
   });
 
   group('the chip inventory', () {
     testWidgets('says so when there are none', (tester) async {
       await pump(tester, latest: () => null, record: (_) {});
-      expect(find.text('No free days yet'), findsOneWidget);
+      expect(find.bySemanticsLabel('No free days yet'), findsOneWidget);
     });
 
     testWidgets('lists days from other months too', (tester) async {

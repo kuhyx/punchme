@@ -32,9 +32,9 @@ void main() {
   testWidgets('shows a card per period', (tester) async {
     await pump(tester, FakeDayRepository());
     expect(find.byType(BalanceCard), findsNWidgets(3));
-    expect(find.text('This week'), findsOneWidget);
-    expect(find.text('This month'), findsOneWidget);
-    expect(find.text('This year'), findsOneWidget);
+    expect(find.bySemanticsLabel('This week'), findsOneWidget);
+    expect(find.bySemanticsLabel('This month'), findsOneWidget);
+    expect(find.bySemanticsLabel('This year'), findsOneWidget);
   });
 
   testWidgets('a matching day reads as on track', (tester) async {
@@ -43,7 +43,7 @@ void main() {
       tester,
       FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
     );
-    expect(find.text('On track'), findsNWidgets(3));
+    expect(find.bySemanticsLabel('On track'), findsNWidgets(3));
   });
 
   testWidgets('a short day reads as a shortfall', (tester) async {
@@ -66,7 +66,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, FakeDayRepository());
-    expect(find.text('On track'), findsNWidgets(3));
+    expect(find.bySemanticsLabel('On track'), findsNWidgets(3));
   });
 
   testWidgets("today's open session shows separately", (tester) async {
@@ -78,7 +78,10 @@ void main() {
         ],
       ),
     );
-    expect(find.textContaining('Today so far 3h 00m'), findsNWidgets(3));
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Today so far 3h 00m'))),
+      findsNWidgets(3),
+    );
   });
 
   testWidgets('reports worked against the whole period quota', (tester) async {
@@ -90,9 +93,18 @@ void main() {
       tester,
       FakeDayRepository(days: <DayEntry>[closed('2026-08-24')]),
     );
-    expect(find.textContaining('Worked 8h 00m of 40h 00m'), findsOneWidget);
-    expect(find.textContaining('Worked 8h 00m of 48h 00m'), findsOneWidget);
-    expect(find.textContaining('Worked 8h 00m of 752h 00m'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Worked 8h 00m of 40h 00m'))),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Worked 8h 00m of 48h 00m'))),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Worked 8h 00m of 752h 00m'))),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the reported Tue/Wed/Thu week reads 8h 23m of 24h', (
@@ -121,8 +133,14 @@ void main() {
       ),
     );
     // Week and month coincide here: both run Tue 25 - Thu 27 August.
-    expect(find.textContaining('Worked 8h 23m of 24h 00m'), findsNWidgets(2));
-    expect(find.textContaining('Worked 8h 23m of 456h 00m'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Worked 8h 23m of 24h 00m'))),
+      findsNWidgets(2),
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Worked 8h 23m of 456h 00m'))),
+      findsOneWidget,
+    );
     expect(find.text('+0h 23m'), findsNWidgets(3));
   });
 
@@ -136,6 +154,6 @@ void main() {
         ),
       ),
     );
-    expect(find.text('On track'), findsNWidgets(3));
+    expect(find.bySemanticsLabel('On track'), findsNWidgets(3));
   });
 }

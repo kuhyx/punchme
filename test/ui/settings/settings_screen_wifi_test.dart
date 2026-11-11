@@ -52,14 +52,16 @@ void main() {
 
   testWidgets('says so when none are configured', (tester) async {
     await pump(tester, FakeDayRepository());
-    await scrollTo(tester, find.text('No work Wi-Fi networks yet'));
-    expect(find.text('No work Wi-Fi networks yet'), findsOneWidget);
+    await scrollTo(tester, find.bySemanticsLabel('No work Wi-Fi networks yet'));
+    expect(find.bySemanticsLabel('No work Wi-Fi networks yet'), findsOneWidget);
   });
 
   testWidgets('Work Wi-Fi is the first section', (tester) async {
     await pump(tester, FakeDayRepository());
-    final wifi = tester.getTopLeft(find.text('Work Wi-Fi')).dy;
-    final hours = tester.getTopLeft(find.text('Hours per working day')).dy;
+    final wifi = tester.getTopLeft(find.bySemanticsLabel('Work Wi-Fi')).dy;
+    final hours = tester
+        .getTopLeft(find.bySemanticsLabel('Hours per working day'))
+        .dy;
     expect(wifi, lessThan(hours));
   });
 
@@ -67,7 +69,7 @@ void main() {
     final repo = FakeDayRepository();
     await pump(tester, repo);
 
-    await tester.tap(find.text('Add current network'));
+    await tester.tap(find.bySemanticsLabel('Add current network'));
     await tester.pumpAndSettle();
 
     expect((await repo.loadSettings()).workWifiSsids, const <String>{'Office'});
@@ -92,7 +94,7 @@ void main() {
     final repo = FakeDayRepository();
     await pump(tester, repo, picker: fakePicker(ssid: null));
 
-    await tester.tap(find.text('Add current network'));
+    await tester.tap(find.bySemanticsLabel('Add current network'));
     await tester.pumpAndSettle();
 
     expect((await repo.loadSettings()).workWifiSsids, isEmpty);
@@ -103,7 +105,13 @@ void main() {
     tester,
   ) async {
     await pump(tester, FakeDayRepository());
-    await scrollTo(tester, find.text('Add a network above to turn this on.'));
-    expect(find.text('Add a network above to turn this on.'), findsOneWidget);
+    await scrollTo(
+      tester,
+      find.bySemanticsLabel('Add a network above to turn this on.'),
+    );
+    expect(
+      find.bySemanticsLabel('Add a network above to turn this on.'),
+      findsOneWidget,
+    );
   });
 }

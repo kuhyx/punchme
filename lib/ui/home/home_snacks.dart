@@ -31,12 +31,10 @@ mixin HomeSnacks<T extends StatefulWidget> on State<T> {
   }
 
   /// Satisfies `CommitWindow`: a tag written by a newer app version.
-  void warnUnknownTagVersion() =>
-      showSnack(const SnackBar(content: Text(kUnknownTagVersionMessage)));
+  void warnUnknownTagVersion() => showSnack(unknownTagVersionBanner());
 
   /// Satisfies `CommitWindow`: a tag with no punch payload on it.
-  void warnBlankTag() =>
-      showSnack(const SnackBar(content: Text(kBlankTagMessage)));
+  void warnBlankTag() => showSnack(blankTagBanner());
 
   /// Queues [bar].
   ///

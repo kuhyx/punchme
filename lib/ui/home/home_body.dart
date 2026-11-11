@@ -73,9 +73,13 @@ class HomeBody extends StatelessWidget {
         // is fixed right where it was made, not three screens away.
         if (onEditToday != null)
           TextButton.icon(
+            key: const Key('edit-today'),
             onPressed: onEditToday,
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text("Edit today's times"),
+            icon: const Icon(
+              Icons.edit_outlined,
+              semanticLabel: "Edit today's times",
+            ),
+            label: const SizedBox.shrink(),
           ),
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),

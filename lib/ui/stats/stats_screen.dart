@@ -83,7 +83,7 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     final now = widget.now();
     return Scaffold(
-      appBar: AppBar(title: const Text('Statistics')),
+      appBar: AppBar(),
       // Scaled down to fit rather than scrolled: the three cards always
       // share one screen, whatever the text size.
       body: LayoutBuilder(
@@ -103,7 +103,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     Horizon.year,
                   ]) ...<Widget>[
                     BalanceCard(
-                      title: horizon.title,
+                      horizon: horizon,
                       balance: _balanceFor(
                         _periodStart(horizon, now),
                         _periodEnd(horizon, now),

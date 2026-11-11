@@ -5,6 +5,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/models/day_entry.dart';
+import 'package:punchme/ui/glyphs.dart';
 
 /// Formats [moment] as `HH:MM`.
 String clockLabel(DateTime moment) {
@@ -47,16 +48,15 @@ class TodaySummary extends StatelessWidget {
     final theme = Theme.of(context);
     final current = entry;
     if (current == null) {
-      return Text(
-        'Not checked in today',
-        style: TextStyle(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontSize: AppTextSize.body,
-        ),
-      );
+      // The button above already offers check-in; nothing to add.
+      return const SizedBox.shrink();
     }
 
     final total = current.worked ?? now().difference(current.checkIn);
+    final body = TextStyle(
+      color: theme.colorScheme.onSurface,
+      fontSize: AppTextSize.body,
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
@@ -66,21 +66,37 @@ class TodaySummary extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                current.checkOut == null
-                    ? 'In ${clockLabel(current.checkIn)}'
-                    : 'In ${clockLabel(current.checkIn)} · '
-                          'Out ${clockLabel(current.checkOut!)}',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: AppTextSize.body,
-                ),
+              Wrap(
+                spacing: AppSpacing.md,
+                children: <Widget>[
+                  IconValue(
+                    key: const Key('summary-in'),
+                    icon: Icons.login,
+                    value: clockLabel(current.checkIn),
+                    spoken: 'In ${clockLabel(current.checkIn)}',
+                    style: body,
+                  ),
+                  if (current.checkOut != null)
+                    IconValue(
+                      key: const Key('summary-out'),
+                      icon: Icons.logout,
+                      value: clockLabel(current.checkOut!),
+                      spoken: 'Out ${clockLabel(current.checkOut!)}',
+                      style: body,
+                    ),
+                ],
               ),
               const SizedBox(height: AppSpacing.xs),
               if (target != null)
-                Text(
-                  'Until ${clockLabel(target!.checkOutAt)} '
-                  '(${durationLabel(target!.share)})',
+                IconValue(
+                  key: const Key('summary-target'),
+                  icon: Icons.flag_outlined,
+                  value:
+                      '${clockLabel(target!.checkOutAt)} '
+                      '(${durationLabel(target!.share)})',
+                  spoken:
+                      'Until ${clockLabel(target!.checkOutAt)} '
+                      '(${durationLabel(target!.share)})',
                   style: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: AppTextSize.label,
@@ -98,7 +114,11 @@ class TodaySummary extends StatelessWidget {
           ),
         ),
         if (onUndo != null)
-          TextButton(onPressed: onUndo, child: const Text('Undo')),
+          TextButton(
+            key: const Key('undo'),
+            onPressed: onUndo,
+            child: const Icon(Icons.undo, semanticLabel: 'Undo'),
+          ),
       ],
     );
   }

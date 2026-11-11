@@ -28,7 +28,12 @@ void main() {
         );
 
     bool switchOn(WidgetTester tester, String label) => tester
-        .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, label))
+        .widget<SwitchListTile>(
+          find.ancestor(
+            of: find.bySemanticsLabel(label),
+            matching: find.byType(SwitchListTile),
+          ),
+        )
         .value;
 
     testWidgets('shows one switch per card, on when it counts', (tester) async {
@@ -40,13 +45,13 @@ void main() {
 
     testWidgets('switching a card off drops only that card', (tester) async {
       await pump(tester, Settings.allHorizons);
-      await tester.tap(find.text('This month'));
+      await tester.tap(find.bySemanticsLabel('This month'));
       expect(changes.single, const <Horizon>{Horizon.week, Horizon.year});
     });
 
     testWidgets('switching a card on adds it', (tester) async {
       await pump(tester, const <Horizon>{Horizon.week});
-      await tester.tap(find.text('This year'));
+      await tester.tap(find.bySemanticsLabel('This year'));
       expect(changes.single, const <Horizon>{Horizon.week, Horizon.year});
     });
   });
@@ -68,7 +73,10 @@ void main() {
     await tester.pumpAndSettle();
     // Fully on screen, not just scrolled to the edge: a tap on a tile half
     // under the viewport lands on nothing.
-    final yearSwitch = find.widgetWithText(SwitchListTile, 'This year');
+    final yearSwitch = find.ancestor(
+      of: find.bySemanticsLabel('This year'),
+      matching: find.byType(SwitchListTile),
+    );
     await tester.scrollUntilVisible(
       yearSwitch,
       200,

@@ -46,13 +46,13 @@ void main() {
     // the banner is cleared so a failed alarm is not queued behind it. The
     // banner itself is covered for check-out, and for a check-in with no
     // target, in nfc_punch_test.dart.
-    expect(find.text('Set alarm'), findsOneWidget);
-    await tester.tap(find.text('Not now'));
+    expect(find.byKey(const Key('alarm-set')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('alarm-not-now')));
     await tester.pumpAndSettle();
 
     expect(repo.savedDays, hasLength(1));
     expect(repo.savedDays.single.checkOut, isNull);
-    expect(find.text('CHECK OUT'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
   });
 
   testWidgets('an unwritten tag prompts for the write screen', (tester) async {
@@ -80,9 +80,9 @@ void main() {
     discovered(const NfcTag(data: 'x'));
     await tester.pumpAndSettle();
 
-    expect(find.text(kBlankTagMessage), findsOneWidget);
+    expect(find.bySemanticsLabel(kBlankTagMessage), findsOneWidget);
     expect(repo.savedDays, isEmpty);
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('builds a real service when none is injected', (tester) async {
@@ -90,6 +90,6 @@ void main() {
       MaterialApp(home: HomeWithNfc(repository: FakeDayRepository())),
     );
     await tester.pumpAndSettle();
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 }

@@ -36,7 +36,7 @@ void main() {
           theme: buildLightTheme(),
           home: Scaffold(
             body: BalanceCard(
-              title: 'This month',
+              horizon: Horizon.month,
               balance: behind,
               infoOnly: infoOnly,
             ),
@@ -52,7 +52,7 @@ void main() {
       tester.element(find.byType(BalanceCard)),
     ).extension<AppStatusColors>()!;
     expect(chipFill(tester), status.danger);
-    expect(find.text('This month'), findsOneWidget);
+    expect(find.bySemanticsLabel('This month'), findsOneWidget);
   });
 
   testWidgets('an info-only card is labelled and drawn neutral', (
@@ -60,7 +60,8 @@ void main() {
   ) async {
     await pumpCard(tester, infoOnly: true);
     final theme = Theme.of(tester.element(find.byType(BalanceCard)));
-    expect(find.text('This month · Info only'), findsOneWidget);
+    expect(find.bySemanticsLabel('This month'), findsOneWidget);
+    expect(find.byKey(const Key('info-only')), findsOneWidget);
     expect(chipFill(tester), theme.colorScheme.surfaceContainerHighest);
     expect(find.text('-4h 00m'), findsOneWidget);
   });
@@ -77,8 +78,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('This week'), findsOneWidget);
-    expect(find.text('This month · Info only'), findsOneWidget);
-    expect(find.text('This year · Info only'), findsOneWidget);
+    expect(find.bySemanticsLabel('This week'), findsOneWidget);
+    expect(find.bySemanticsLabel('This month'), findsOneWidget);
+    expect(find.bySemanticsLabel('This year'), findsOneWidget);
+    // Month and year are info only; the week counts.
+    expect(find.byKey(const Key('info-only')), findsNWidgets(2));
   });
 }

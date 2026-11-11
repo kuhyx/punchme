@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:punchme/logic/surplus.dart';
 import 'package:punchme/logic/target_time.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
 /// Explains where today's [target] comes from, in one sentence.
@@ -44,6 +45,75 @@ String _aheadReason(TargetToday target) {
   return '$reason Capped at ${durationLabel(maxSurplusSlice)} off a day.';
 }
 
+/// [targetReason] in pictograms: trend arrow and amount, the card, how many
+/// days it is spread over, and the cap when one bit.
+class TargetReason extends StatelessWidget {
+  /// Creates the reason row for [target].
+  const TargetReason({required this.target, this.style, super.key});
+
+  /// Today's computed target.
+  final TargetToday target;
+
+  /// Style of the numbers.
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final horizon = switch (target.level) {
+      DeficitLevel.none => target.tightest,
+      DeficitLevel.week => Horizon.week,
+      DeficitLevel.month => Horizon.month,
+      DeficitLevel.year => Horizon.year,
+    };
+    final behind = target.level != DeficitLevel.none;
+    final capped = behind ? target.isCapped : target.surplusCapped;
+    final children = <Widget>[
+      if (horizon == null)
+        Icon(
+          Icons.check,
+          key: const Key('reason-on-track'),
+          color: style?.color,
+        )
+      else ...<Widget>[
+        IconValue(
+          key: const Key('reason-amount'),
+          icon: behind ? Icons.trending_down : Icons.trending_up,
+          value: durationLabel(behind ? target.deficit : target.surplus),
+          spoken: '',
+          style: style,
+        ),
+        HorizonGlyph(horizon, style: style),
+        IconValue(
+          key: const Key('reason-spread'),
+          icon: Icons.date_range,
+          value: '${target.spreadOver}',
+          spoken: '',
+          style: style,
+        ),
+      ],
+      if (capped)
+        IconValue(
+          key: const Key('reason-cap'),
+          icon: Icons.vertical_align_top,
+          value: durationLabel(behind ? target.uncovered : maxSurplusSlice),
+          spoken: '',
+          style: style,
+        ),
+    ];
+    return Semantics(
+      container: true,
+      label: targetReason(target),
+      excludeSemantics: true,
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: children,
+      ),
+    );
+  }
+}
+
 /// Asks whether to set a phone alarm for the target check-out time.
 class CheckOutAlarmDialog extends StatelessWidget {
   /// Creates the dialog for [target].
@@ -56,31 +126,62 @@ class CheckOutAlarmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('Checked in'),
+      title: const Icon(
+        Icons.check_circle_outline,
+        key: Key('alarm-title'),
+        semanticLabel: 'Checked in',
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            'Work ${durationLabel(target.share)} today, '
-            'until ${clockLabel(target.checkOutAt)}.',
-            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18),
+          Semantics(
+            container: true,
+            label:
+                'Work ${durationLabel(target.share)} today, '
+                'until ${clockLabel(target.checkOutAt)}.',
+            excludeSemantics: true,
+            child: Wrap(
+              spacing: 16,
+              children: <Widget>[
+                IconValue(
+                  icon: Icons.work_outline,
+                  value: durationLabel(target.share),
+                  spoken: durationLabel(target.share),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 18,
+                  ),
+                ),
+                IconValue(
+                  icon: Icons.flag_outlined,
+                  value: clockLabel(target.checkOutAt),
+                  spoken: clockLabel(target.checkOutAt),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
-          Text(
-            targetReason(target),
+          TargetReason(
+            target: target,
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
       actions: <Widget>[
-        TextButton(
+        IconButton(
+          key: const Key('alarm-not-now'),
+          icon: const Icon(Icons.close, semanticLabel: 'Not now'),
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Not now'),
         ),
         FilledButton(
+          key: const Key('alarm-set'),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Set alarm'),
+          child: const Icon(Icons.alarm_add, semanticLabel: 'Set alarm'),
         ),
       ],
     );

@@ -124,20 +124,14 @@ class ExportChannel {
       if (call.method == kDumpSessionMethod) {
         final dump = sessionDump;
         if (dump == null) {
-          throw PlatformException(
-            code: 'no-session-dump',
-            message: 'this build cannot export a session',
-          );
+          throw PlatformException(code: 'no-session-dump');
         }
         return await dump();
       }
       if (call.method == kRunSyncCheckMethod) {
         final check = syncCheck;
         if (check == null) {
-          throw PlatformException(
-            code: 'no-sync',
-            message: 'this build has no sync configured',
-          );
+          throw PlatformException(code: 'no-sync');
         }
         return await check();
       }
@@ -151,10 +145,7 @@ class ExportChannel {
       }
       final format = ExportFormat.parse(call.arguments as String?);
       if (format == null) {
-        throw PlatformException(
-          code: 'unknown-format',
-          message: 'expected one of: ${ExportFormat.values.map((f) => f.name)}',
-        );
+        throw PlatformException(code: 'unknown-format');
       }
       return await renderExport(
         repository: repository,

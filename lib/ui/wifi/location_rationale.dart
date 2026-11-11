@@ -3,6 +3,7 @@ library;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:punchme/ui/glyphs.dart';
 
 /// Why reading a Wi-Fi network name needs location.
 const String kLocationRationale =
@@ -21,23 +22,51 @@ const String kBackgroundLocationHint =
     '"Watching for work Wi-Fi" notice). Then it asks a second time: choose '
     '"Allow all the time" so clocking in also works while punchme is closed.';
 
-/// The explanation, as plain stacked paragraphs.
+/// The explanation, as three rows of pictograms (textgate).
+///
+/// Each row reads left to right like the sentence it replaces, which stays
+/// as the row's spoken label:
+/// 1. work Wi-Fi -> auto clock-in; Wi-Fi name -> needs location.
+/// 2. no GPS; only the network names, synced to your own devices.
+/// 3. the prompts in order: location, notifications, then "all the time".
 class LocationRationale extends StatelessWidget {
   /// Creates the explanation block.
   const LocationRationale({super.key});
 
   @override
-  Widget build(BuildContext context) => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisSize: MainAxisSize.min,
-    children: <Widget>[
-      Text(kLocationRationale),
-      SizedBox(height: AppSpacing.sm),
-      Text(kLocationPromise),
-      SizedBox(height: AppSpacing.sm),
-      Text(kBackgroundLocationHint),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    Widget row(Key key, List<IconData> icons, String spoken) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Cue(key: key, icons: icons, spoken: spoken, size: 40),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        row(const Key('rationale-why'), const <IconData>[
+          Icons.wifi,
+          Icons.arrow_forward,
+          Icons.punch_clock_outlined,
+          Icons.add,
+          Icons.location_on_outlined,
+        ], kLocationRationale),
+        Divider(color: muted.withValues(alpha: 0.3)),
+        row(const Key('rationale-promise'), const <IconData>[
+          Icons.gps_off,
+          Icons.wifi,
+          Icons.arrow_forward,
+          Icons.devices,
+        ], kLocationPromise),
+        Divider(color: muted.withValues(alpha: 0.3)),
+        row(const Key('rationale-next'), const <IconData>[
+          Icons.location_on_outlined,
+          Icons.notifications_outlined,
+          Icons.arrow_forward,
+          Icons.all_inclusive,
+        ], kBackgroundLocationHint),
+      ],
+    );
+  }
 }
 
 /// Shows the explanation and reports whether the user chose to continue.
@@ -45,16 +74,21 @@ Future<bool> showLocationRationaleDialog(BuildContext context) async =>
     await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Why location?'),
+        title: const Icon(
+          Icons.location_on_outlined,
+          semanticLabel: 'Why location?',
+        ),
         content: const SingleChildScrollView(child: LocationRationale()),
         actions: <Widget>[
-          TextButton(
+          IconButton(
+            key: const Key('rationale-not-now'),
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Not now'),
+            icon: const Icon(Icons.close, semanticLabel: 'Not now'),
           ),
-          FilledButton(
+          IconButton(
+            key: const Key('rationale-continue'),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Continue'),
+            icon: const Icon(Icons.check, semanticLabel: 'Continue'),
           ),
         ],
       ),

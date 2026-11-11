@@ -89,16 +89,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final current = widget.now();
     final atLatest = !_month.isBefore(DateTime(current.year, current.month));
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(),
       floatingActionButton: FloatingActionButton(
+        key: const Key('add-day'),
         onPressed: _addMissingDay,
-        tooltip: 'Add a missing day',
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, semanticLabel: 'Add a missing day'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _days.isEmpty
-          ? const Center(child: Text('No days recorded yet'))
+          ? const Center(
+              child: Icon(
+                Icons.event_note_outlined,
+                size: 64,
+                semanticLabel: 'No days recorded yet',
+              ),
+            )
           : Column(
               children: <Widget>[
                 Row(

@@ -8,6 +8,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:punchme/sync/sync_service.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
 
 /// The project's **Web** OAuth client id.
@@ -133,9 +134,31 @@ class _SyncActionsState extends State<SyncActions> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(failure),
+        content: Row(
+          children: <Widget>[
+            Expanded(
+              child: Row(
+                children: <Widget>[
+                  Cue(
+                    key: const Key('sync-failed'),
+                    icons: failure.icons,
+                    spoken: failure.spoken,
+                  ),
+                  // The platform's own error, not app chrome: kept visible
+                  // because it is the only clue to a misconfiguration.
+                  if (failure.detail != null)
+                    Expanded(child: Text(failure.detail!)),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const Key('snack-retry'),
+              onPressed: _connect,
+              icon: const Icon(Icons.refresh, semanticLabel: 'Retry'),
+            ),
+          ],
+        ),
         duration: const Duration(seconds: 10),
-        action: SnackBarAction(label: 'Retry', onPressed: _connect),
       ),
     );
   }
@@ -146,7 +169,7 @@ class _SyncActionsState extends State<SyncActions> {
   /// Firebase rejecting the token, or a sign-in that reports success while the
   /// keystore ends up with no session -- produces a message, because a tile
   /// that exists to stop sync failing silently must not fail silently itself.
-  Future<String?> _attempt() async {
+  Future<_SyncFailure?> _attempt() async {
     try {
       final status = await widget.connect();
       if (status == GoogleSignInStatus.cancelled) {
@@ -156,24 +179,43 @@ class _SyncActionsState extends State<SyncActions> {
       // Surfaced rather than swallowed: a wrong-uid or unregistered-client
       // failure is a misconfiguration the user has to see, not a silent
       // return to "Not connected".
-      return 'Sign-in failed: $error';
+      return _SyncFailure(
+        icons: const <IconData>[Icons.error_outline],
+        spoken: 'Sign-in failed: $error',
+        detail: '$error',
+      );
     }
     if (await widget.probe()) {
       return null;
     }
     // Google said yes and the keystore still holds nothing. Reporting success
     // here is what "connected but never syncs" looks like from the outside.
-    return 'Signed in, but no session was stored: this device will not sync.';
+    return const _SyncFailure(
+      icons: <IconData>[Icons.account_circle, Icons.key_off],
+      spoken:
+          'Signed in, but no session was stored: this device will not sync.',
+    );
   }
 
   @override
   Widget build(BuildContext context) => ListTile(
     contentPadding: EdgeInsets.zero,
-    title: Text(_connected ? 'Sync connected' : 'Connect Google account'),
-    subtitle: Text(
-      _connected
-          ? 'This device syncs its hours with your other devices.'
-          : 'Until this is connected, hours stay on this device only.',
+    leading: const Icon(Icons.account_circle),
+    title: Align(
+      alignment: Alignment.centerLeft,
+      child: Cue(
+        key: const Key('sync-state'),
+        icons: <IconData>[
+          Icons.smartphone,
+          if (_connected) Icons.sync else Icons.sync_disabled,
+          Icons.devices_other,
+        ],
+        spoken: _connected
+            ? 'Sync connected. This device syncs its hours with your other '
+                  'devices.'
+            : 'Connect Google account. Until this is connected, hours stay '
+                  'on this device only.',
+      ),
     ),
     trailing: _busy
         ? const SizedBox(
@@ -184,4 +226,14 @@ class _SyncActionsState extends State<SyncActions> {
         : Icon(_connected ? Icons.cloud_done_outlined : Icons.cloud_off),
     onTap: _busy || _connected ? null : _connect,
   );
+}
+
+/// Why a connect attempt failed: pictograms, the old sentence, and the
+/// platform's own error text when there is one.
+class _SyncFailure {
+  const _SyncFailure({required this.icons, required this.spoken, this.detail});
+
+  final List<IconData> icons;
+  final String spoken;
+  final String? detail;
 }

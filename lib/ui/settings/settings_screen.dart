@@ -9,6 +9,7 @@ import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/save_target.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/nfc/nfc_service.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/settings/counted_horizons_field.dart';
 import 'package:punchme/ui/settings/export_actions.dart';
 import 'package:punchme/ui/settings/free_days_field.dart';
@@ -118,18 +119,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
+        appBar: AppBar(),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: <Widget>[
           // First: auto-punch is what makes the app hands-free, and the one
           // setting a new install most needs to find.
-          const SectionHeader('Work Wi-Fi'),
+          const IconSection(Icons.wifi, spoken: 'Work Wi-Fi'),
           WifiSsidsField(
             ssids: _settings.workWifiSsids,
             picker: widget.picker,
@@ -139,21 +140,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppSpacing.sm),
           WifiStatusCard(armed: _settings.workWifiSsids.isNotEmpty),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Hours per working day'),
+          const IconSection(Icons.schedule, spoken: 'Hours per working day'),
           HoursField(
             value: _settings.requiredPerDay,
             onChanged: (value) =>
                 _update(_settings.copyWith(requiredPerDay: value)),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Working days'),
+          const IconSection(Icons.date_range, spoken: 'Working days'),
           WeekdayPicker(
             selected: _settings.workingWeekdays,
             onChanged: (value) =>
                 _update(_settings.copyWith(workingWeekdays: value)),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Free days'),
+          const IconSection(Icons.beach_access, spoken: 'Free days'),
           FreeDaysField(
             freeDays: _settings.freeDays,
             workingWeekdays: _settings.workingWeekdays,
@@ -161,20 +162,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (value) => _update(_settings.copyWith(freeDays: value)),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('What counts'),
+          const IconSection(Icons.functions, spoken: 'What counts'),
           CountedHorizonsField(
             counted: _settings.countedHorizons,
             onChanged: (value) =>
                 _update(_settings.copyWith(countedHorizons: value)),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Clock tag'),
+          const IconSection(Icons.nfc, spoken: 'Clock tag'),
           ListTile(
+            key: const Key('write-tag'),
             contentPadding: EdgeInsets.zero,
-            title: const Text('Write clock tag'),
-            subtitle: const Text(
-              'Turn a blank NFC tag into one you can tap to clock in or out.',
-            ),
+            leading: const Icon(Icons.edit, semanticLabel: 'Write clock tag'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -184,13 +183,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Sync'),
+          const IconSection(Icons.sync, spoken: 'Sync'),
           SyncActions(
             probe: widget.syncProbe ?? probeSyncSession,
             connect: widget.syncConnect ?? connectSyncAccount,
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader('Export'),
+          const IconSection(Icons.ios_share, spoken: 'Export'),
           ExportActions(
             repository: widget.repository,
             share: widget.share,

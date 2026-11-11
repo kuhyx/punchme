@@ -47,7 +47,7 @@ void main() {
       await pumpEditor(tester, closed('2026-08-24'));
       expect(find.text('09:00'), findsOneWidget);
 
-      await tester.tap(find.text('Check in'));
+      await tester.tap(find.byKey(const Key('check-in-tile')));
       await tester.pumpAndSettle();
       // Switch to keyboard entry so a time can be typed deterministically.
       await tester.tap(find.byIcon(Icons.keyboard_outlined));
@@ -68,9 +68,15 @@ void main() {
 
     testWidgets('editing the check-out updates the total', (tester) async {
       await pumpEditor(tester, closed('2026-08-24'));
-      expect(find.text('Total 8h 00m'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('day-total')),
+          matching: find.text('8h 00m'),
+        ),
+        findsOneWidget,
+      );
 
-      await tester.tap(find.text('Check out'));
+      await tester.tap(find.byKey(const Key('check-out-tile')));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.keyboard_outlined));
       await tester.pumpAndSettle();
@@ -85,13 +91,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Total 9h 00m'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('day-total')),
+          matching: find.text('9h 00m'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('cancelling a picker leaves the time alone', (tester) async {
       await pumpEditor(tester, closed('2026-08-24'));
 
-      await tester.tap(find.text('Check in'));
+      await tester.tap(find.byKey(const Key('check-in-tile')));
       await tester.pumpAndSettle();
       // Both dialogs offer Cancel; target the time picker's.
       await tester.tap(
@@ -113,9 +125,9 @@ void main() {
         checkIn: DateTime(2026, 8, 24, 9),
       );
       await pumpEditor(tester, open);
-      expect(find.text('not set'), findsOneWidget);
+      expect(find.text('--:--'), findsOneWidget);
 
-      await tester.tap(find.text('Check out'));
+      await tester.tap(find.byKey(const Key('check-out-tile')));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.keyboard_outlined));
       await tester.pumpAndSettle();
@@ -130,7 +142,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Total 8h 00m'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('day-total')),
+          matching: find.text('8h 00m'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 
@@ -145,7 +163,7 @@ void main() {
       );
       await pumpEditor(tester, night);
 
-      await tester.tap(find.text('Check out'));
+      await tester.tap(find.byKey(const Key('check-out-tile')));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.keyboard_outlined));
       await tester.pumpAndSettle();
@@ -160,7 +178,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Total 4h 00m'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('day-total')),
+          matching: find.text('4h 00m'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 
@@ -169,13 +193,13 @@ void main() {
       final result = await pumpEditor(tester, closed('2026-08-24'));
       expect(result, isNull); // not yet popped
 
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.byKey(const Key('day-save')));
       await tester.pumpAndSettle();
     });
 
     testWidgets('Delete returns a delete result', (tester) async {
       await pumpEditor(tester, closed('2026-08-24'));
-      await tester.tap(find.text('Delete'));
+      await tester.tap(find.byKey(const Key('day-delete')));
       await tester.pumpAndSettle();
       expect(find.byType(DayEditor), findsNothing);
     });

@@ -41,11 +41,14 @@ void main() {
     await pump(tester, serviceWith(ndef: ndef));
 
     await tester.enterText(find.byType(TextField), 'kitchen');
-    await tester.tap(find.text('Write tag'));
+    await tester.tap(find.bySemanticsLabel('Write tag'));
     await tester.pumpAndSettle();
 
     expect(readPunchTag(ndef.written.single), const PunchTag(label: 'kitchen'));
-    expect(find.textContaining('Tag written'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Tag written'))),
+      findsOneWidget,
+    );
   });
 
   testWidgets('defaults the label when it is left blank', (tester) async {
@@ -53,7 +56,7 @@ void main() {
     await pump(tester, serviceWith(ndef: ndef));
 
     await tester.enterText(find.byType(TextField), '   ');
-    await tester.tap(find.text('Write tag'));
+    await tester.tap(find.bySemanticsLabel('Write tag'));
     await tester.pumpAndSettle();
 
     expect(
@@ -65,10 +68,13 @@ void main() {
   testWidgets('asks for NFC to be turned on', (tester) async {
     await pump(tester, serviceWith(availability: NfcAvailability.disabled));
 
-    await tester.tap(find.text('Write tag'));
+    await tester.tap(find.bySemanticsLabel('Write tag'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Turn NFC on'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Turn NFC on'))),
+      findsOneWidget,
+    );
   });
 
   testWidgets('waits, and disables the field, until a tag arrives', (
@@ -76,10 +82,10 @@ void main() {
   ) async {
     await pump(tester, serviceWith(discover: false));
 
-    await tester.tap(find.text('Write tag'));
+    await tester.tap(find.bySemanticsLabel('Write tag'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Waiting for a tag...'), findsOneWidget);
+    expect(find.bySemanticsLabel('Waiting for a tag...'), findsOneWidget);
     expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
   });
 
@@ -90,9 +96,12 @@ void main() {
       String fragment,
     ) async {
       await pump(tester, serviceWith(ndef: ndef));
-      await tester.tap(find.text('Write tag'));
+      await tester.tap(find.bySemanticsLabel('Write tag'));
       await tester.pumpAndSettle();
-      expect(find.textContaining(fragment), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape(fragment))),
+        findsOneWidget,
+      );
     }
 
     testWidgets('a locked tag', (tester) async {
@@ -137,7 +146,7 @@ void main() {
           }) async {},
     );
     await pump(tester, service);
-    await tester.tap(find.text('Write tag'));
+    await tester.tap(find.bySemanticsLabel('Write tag'));
     await tester.pumpAndSettle();
 
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));

@@ -31,7 +31,7 @@ void main() {
   group('listing', () {
     testWidgets('says so when nothing is recorded', (tester) async {
       await pump(tester, FakeDayRepository());
-      expect(find.text('No days recorded yet'), findsOneWidget);
+      expect(find.bySemanticsLabel('No days recorded yet'), findsOneWidget);
     });
 
     testWidgets('shows the current month with a day total', (tester) async {
@@ -115,9 +115,9 @@ void main() {
       await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Check in'), findsOneWidget);
-      expect(find.text('Check out'), findsOneWidget);
-      expect(find.text('Total 8h 00m'), findsOneWidget);
+      expect(find.byKey(const Key('check-in-tile')), findsOneWidget);
+      expect(find.byKey(const Key('check-out-tile')), findsOneWidget);
+      expect(find.bySemanticsLabel('Total 8h 00m'), findsOneWidget);
     });
 
     testWidgets('cancelling changes nothing', (tester) async {
@@ -126,7 +126,7 @@ void main() {
 
       await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
+      await tester.tap(find.byKey(const Key('day-cancel')));
       await tester.pumpAndSettle();
 
       expect(repo.savedDays, isEmpty);
@@ -139,7 +139,7 @@ void main() {
 
       await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.byKey(const Key('day-save')));
       await tester.pumpAndSettle();
 
       expect(repo.savedDays.single.dateKey, '2026-08-24');
@@ -151,11 +151,11 @@ void main() {
 
       await tester.tap(cell('2026-08-24'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Delete'));
+      await tester.tap(find.byKey(const Key('day-delete')));
       await tester.pumpAndSettle();
 
       expect(repo.deletedKeys, <String>['2026-08-24']);
-      expect(find.text('No days recorded yet'), findsOneWidget);
+      expect(find.bySemanticsLabel('No days recorded yet'), findsOneWidget);
     });
   });
 
@@ -164,7 +164,7 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.byTooltip('Add a missing day'));
+      await tester.tap(find.byKey(const Key('add-day')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
@@ -172,7 +172,7 @@ void main() {
       // The editor opens on the picked day, defaulting to a 09:00 start.
       expect(find.text('2026-08-25'), findsOneWidget);
 
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.byKey(const Key('day-save')));
       await tester.pumpAndSettle();
 
       expect(repo.savedDays.single.dateKey, '2026-08-25');
@@ -183,7 +183,7 @@ void main() {
       final repo = FakeDayRepository();
       await pump(tester, repo);
 
-      await tester.tap(find.byTooltip('Add a missing day'));
+      await tester.tap(find.byKey(const Key('add-day')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -209,7 +209,7 @@ void main() {
 
       await tester.tap(cell('2026-08-23'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.byKey(const Key('day-save')));
       await tester.pumpAndSettle();
 
       // The editor re-keys to the check-in's real date, and the stale key

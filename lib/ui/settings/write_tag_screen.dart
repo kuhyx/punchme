@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:punchme/nfc/nfc_service.dart';
 import 'package:punchme/nfc/punch_tag.dart';
+import 'package:punchme/ui/glyphs.dart';
 
 /// The message shown for each way a write can fail.
 String writeFailureMessage(NfcWriteFailure failure) {
@@ -21,6 +22,29 @@ String writeFailureMessage(NfcWriteFailure failure) {
   }
 }
 
+/// The pictograms standing in for each failure message.
+List<IconData> writeFailureIcons(NfcWriteFailure failure) => switch (failure) {
+  NfcWriteFailure.notWritable => const <IconData>[
+    Icons.error_outline,
+    Icons.lock,
+  ],
+  NfcWriteFailure.tooLarge => const <IconData>[
+    Icons.error_outline,
+    Icons.sd_card_alert,
+  ],
+  NfcWriteFailure.interrupted => const <IconData>[
+    Icons.error_outline,
+    Icons.pan_tool,
+  ],
+  NfcWriteFailure.verifyMismatch => const <IconData>[
+    Icons.error_outline,
+    Icons.sync_problem,
+  ],
+};
+
+/// A status line: pictograms plus the sentence they replace (spoken only).
+typedef WriteTagStatus = ({List<IconData> icons, String spoken});
+
 /// Writes a clock tag, and reports how it went.
 class WriteTagScreen extends StatefulWidget {
   /// Creates the screen backed by [service].
@@ -34,8 +58,9 @@ class WriteTagScreen extends StatefulWidget {
 }
 
 class _WriteTagScreenState extends State<WriteTagScreen> {
-  final TextEditingController _label = TextEditingController(text: 'desk');
-  String? _status;
+  // Empty, not a suggested word: the label is the user's own text.
+  final TextEditingController _label = TextEditingController();
+  WriteTagStatus? _status;
   bool _waiting = false;
 
   @override
@@ -58,12 +83,20 @@ class _WriteTagScreenState extends State<WriteTagScreen> {
       return;
     }
     if (availability != NfcAvailability.enabled) {
-      setState(() => _status = 'Turn NFC on to write a tag.');
+      setState(
+        () => _status = (
+          icons: const <IconData>[Icons.nfc, Icons.toggle_off],
+          spoken: 'Turn NFC on to write a tag.',
+        ),
+      );
       return;
     }
     setState(() {
       _waiting = true;
-      _status = 'Hold a blank tag against the back of the phone.';
+      _status = (
+        icons: const <IconData>[Icons.contactless],
+        spoken: 'Hold a blank tag against the back of the phone.',
+      );
     });
     await widget.service.startWriting(
       tag: PunchTag(
@@ -82,8 +115,14 @@ class _WriteTagScreenState extends State<WriteTagScreen> {
     setState(() {
       _waiting = false;
       _status = failure == null
-          ? 'Tag written. Tap it to clock in or out.'
-          : writeFailureMessage(failure);
+          ? (
+              icons: const <IconData>[Icons.check_circle],
+              spoken: 'Tag written. Tap it to clock in or out.',
+            )
+          : (
+              icons: writeFailureIcons(failure),
+              spoken: writeFailureMessage(failure),
+            );
     });
   }
 
@@ -91,7 +130,7 @@ class _WriteTagScreenState extends State<WriteTagScreen> {
   Widget build(BuildContext context) {
     final status = _status;
     return Scaffold(
-      appBar: AppBar(title: const Text('Write clock tag')),
+      appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -101,18 +140,33 @@ class _WriteTagScreenState extends State<WriteTagScreen> {
               controller: _label,
               enabled: !_waiting,
               decoration: const InputDecoration(
-                labelText: 'Tag label',
-                helperText: 'Shown when you tap it, e.g. "desk".',
+                prefixIcon: Icon(
+                  Icons.label_outline,
+                  semanticLabel: 'Tag label',
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
             FilledButton(
+              key: const Key('write-tag-go'),
               onPressed: _waiting ? null : _start,
-              child: Text(_waiting ? 'Waiting for a tag...' : 'Write tag'),
+              child: _waiting
+                  ? const Icon(
+                      Icons.hourglass_top,
+                      semanticLabel: 'Waiting for a tag...',
+                    )
+                  : const Icon(Icons.nfc, semanticLabel: 'Write tag'),
             ),
             if (status != null) ...<Widget>[
               const SizedBox(height: AppSpacing.lg),
-              Text(status, textAlign: TextAlign.center),
+              Center(
+                child: Cue(
+                  key: const Key('write-tag-status'),
+                  icons: status.icons,
+                  spoken: status.spoken,
+                  size: 48,
+                ),
+              ),
             ],
           ],
         ),

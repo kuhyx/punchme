@@ -29,37 +29,37 @@ void main() {
   testWidgets('opens Statistics and comes back', (tester) async {
     await pumpHome(tester, FakeDayRepository());
 
-    await tester.tap(find.byTooltip('Statistics'));
+    await tester.tap(find.byKey(const Key('nav-stats')));
     await tester.pumpAndSettle();
     expect(find.byType(StatsScreen), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('opens History and comes back', (tester) async {
     await pumpHome(tester, FakeDayRepository());
 
-    await tester.tap(find.byTooltip('History'));
+    await tester.tap(find.byKey(const Key('nav-history')));
     await tester.pumpAndSettle();
     expect(find.byType(HistoryScreen), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('opens Settings and comes back', (tester) async {
     await pumpHome(tester, FakeDayRepository());
 
-    await tester.tap(find.byTooltip('Settings'));
+    await tester.tap(find.byKey(const Key('nav-settings')));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsScreen), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('an edit made in History is reflected on return', (tester) async {
@@ -73,18 +73,18 @@ void main() {
       ],
     );
     await pumpHome(tester, repo);
-    expect(find.text('CHECKED OUT'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('History'));
+    await tester.tap(find.byKey(const Key('nav-history')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey<String>('day-2026-08-25')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.byKey(const Key('day-delete')));
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
 
     // Home reloaded, so the deleted day is gone from the button state too.
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 }

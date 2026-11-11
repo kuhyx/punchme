@@ -43,20 +43,20 @@ class HomeNavActions extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: <Widget>[
       IconButton(
-        icon: const Icon(Icons.insights_outlined),
-        tooltip: 'Statistics',
+        key: const Key('nav-stats'),
+        icon: const Icon(Icons.insights_outlined, semanticLabel: 'Statistics'),
         onPressed: () =>
             _open(context, StatsScreen(repository: repository, now: now)),
       ),
       IconButton(
-        icon: const Icon(Icons.history),
-        tooltip: 'History',
+        key: const Key('nav-history'),
+        icon: const Icon(Icons.history, semanticLabel: 'History'),
         onPressed: () =>
             _open(context, HistoryScreen(repository: repository, now: now)),
       ),
       IconButton(
-        icon: const Icon(Icons.settings_outlined),
-        tooltip: 'Settings',
+        key: const Key('nav-settings'),
+        icon: const Icon(Icons.settings_outlined, semanticLabel: 'Settings'),
         onPressed: () => _open(
           context,
           SettingsScreen(repository: repository, now: now, share: share),

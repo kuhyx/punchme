@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:punchme/models/horizon.dart';
+import 'package:punchme/ui/glyphs.dart';
 
 /// One switch per card; a card switched off is info only.
 class CountedHorizonsField extends StatelessWidget {
@@ -22,15 +23,19 @@ class CountedHorizonsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
+    // textgate: the explanation that switched-off cards turn info-only is
+    // gone; Statistics marks such a card with the same info glyph.
     children: <Widget>[
-      const Text(
-        'Cards switched off stay in Statistics for information, but never '
-        "lengthen or shorten today's target.",
-      ),
       for (final horizon in Horizon.values)
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(horizon.title),
+          title: Align(
+            alignment: Alignment.centerLeft,
+            child: HorizonGlyph(horizon),
+          ),
+          secondary: counted.contains(horizon)
+              ? null
+              : const Icon(Icons.info_outline, semanticLabel: 'Info only'),
           value: counted.contains(horizon),
           onChanged: (on) => onChanged(<Horizon>{
             for (final h in Horizon.values)

@@ -97,13 +97,13 @@ class WifiObserverService : Service() {
             manager.createNotificationChannel(
                 NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
-                    "Work Wi-Fi watcher",
+                    // textgate: channel name is the app's proper noun only.
+                    "PunchMe",
                     NotificationManager.IMPORTANCE_MIN,
                 ),
             )
         }
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Watching for work Wi-Fi")
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)

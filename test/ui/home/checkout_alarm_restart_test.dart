@@ -82,8 +82,11 @@ void main() {
       );
       await pump(tester, repo);
 
-      expect(find.text('CHECK OUT'), findsOneWidget);
-      expect(find.textContaining('Until 17:04'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('Until 17:04'))),
+        findsOneWidget,
+      );
       // Nothing is proposed on a plain reopen -- only on a fresh check-in.
       expect(find.text('Checked in'), findsNothing);
       expect(alarms, isEmpty);
@@ -103,8 +106,11 @@ void main() {
       );
       await pump(tester, repo);
 
-      expect(find.text('CHECKED OUT'), findsOneWidget);
-      expect(find.textContaining('Until'), findsNothing);
+      expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('Until'))),
+        findsNothing,
+      );
     });
   });
 
@@ -127,12 +133,12 @@ void main() {
     );
     await tester.pumpAndSettle();
     await checkIn(tester);
-    await tester.tap(find.text('Set alarm'));
+    await tester.tap(find.byKey(const Key('alarm-set')));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Could not set the alarm'), findsOneWidget);
+    expect(find.byKey(const Key('alarm-failed')), findsOneWidget);
     // The day itself is still checked in.
-    expect(find.text('CHECK OUT'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
   });
 }

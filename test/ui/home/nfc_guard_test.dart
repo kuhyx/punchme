@@ -53,8 +53,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.savedDays, isEmpty);
-      expect(find.text('Ignored: you punched moments ago'), findsOneWidget);
-      expect(find.text('CHECK OUT'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Ignored: you punched moments ago'),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
     });
 
     testWidgets('says so when the day is already sealed', (tester) async {
@@ -75,7 +78,10 @@ void main() {
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
 
-      expect(find.text('Today is already checked out'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Today is already checked out'),
+        findsOneWidget,
+      );
       expect(repo.savedDays, isEmpty);
     });
   });
@@ -94,7 +100,10 @@ void main() {
 
       expect(repo.savedDays, hasLength(1));
       // Committed as a press, so it carries no tag label.
-      expect(find.textContaining('via desk tag'), findsNothing);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('via desk tag'))),
+        findsNothing,
+      );
     });
 
     testWidgets('a blank tag points at the write-tag screen', (tester) async {
@@ -105,7 +114,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text(kBlankTagMessage), findsOneWidget);
+      expect(find.bySemanticsLabel(kBlankTagMessage), findsOneWidget);
       expect(repo.savedDays, isEmpty);
     });
 
@@ -120,7 +129,7 @@ void main() {
       handlers.onBlankTag();
       await tester.pump();
 
-      expect(find.text(kBlankTagMessage), findsNothing);
+      expect(find.bySemanticsLabel(kBlankTagMessage), findsNothing);
 
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
@@ -135,7 +144,7 @@ void main() {
 
       await handlers.onPunch(const PunchTag(version: 7, label: 'desk'));
       await tester.pump();
-      expect(find.text(kUnknownTagVersionMessage), findsOneWidget);
+      expect(find.bySemanticsLabel(kUnknownTagVersionMessage), findsOneWidget);
 
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();

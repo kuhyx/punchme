@@ -26,7 +26,7 @@ void main() {
   }
 
   Future<void> openEditor(WidgetTester tester) async {
-    await tester.tap(find.text("Edit today's times"));
+    await tester.tap(find.byKey(const Key('edit-today')));
     await tester.pumpAndSettle();
   }
 
@@ -46,7 +46,7 @@ void main() {
     final repo = openToday();
     await pumpHome(tester, repo);
     await openEditor(tester);
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.byKey(const Key('day-cancel')));
     await tester.pumpAndSettle();
     expect(repo.savedDays, isEmpty);
     expect(repo.deletedKeys, isEmpty);
@@ -56,7 +56,7 @@ void main() {
     final repo = openToday();
     await pumpHome(tester, repo);
     await openEditor(tester);
-    await tester.tap(find.text('Save'));
+    await tester.tap(find.byKey(const Key('day-save')));
     await tester.pumpAndSettle();
     expect(repo.savedDays.single.dateKey, '2026-08-25');
   });
@@ -65,10 +65,10 @@ void main() {
     final repo = openToday();
     await pumpHome(tester, repo);
     await openEditor(tester);
-    await tester.tap(find.text('Delete'));
+    await tester.tap(find.byKey(const Key('day-delete')));
     await tester.pumpAndSettle();
     expect(repo.deletedKeys, <String>['2026-08-25']);
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
     expect(find.text("Edit today's times"), findsNothing);
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/ui/onboarding/onboarding_screen.dart';
 import 'package:punchme/ui/wifi/current_network_picker.dart';
@@ -52,24 +53,29 @@ void main() {
 
   testWidgets('with location granted, goes straight to adding', (tester) async {
     await pump(tester, FakeDayRepository());
-    expect(find.text('Add this network'), findsOneWidget);
-    expect(find.text(kLocationRationale), findsNothing);
+    expect(find.byKey(const Key('onboarding-add-network')), findsOneWidget);
+    expect(find.bySemanticsLabel(kLocationRationale), findsNothing);
   });
 
   testWidgets('without location, explains before anything is asked', (
     tester,
   ) async {
     await pump(tester, FakeDayRepository(), granted: false);
-    expect(find.text(kLocationRationale), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.bySemanticsLabel(kLocationRationale), findsOneWidget);
+    expect(find.byKey(const Key('onboarding-continue')), findsOneWidget);
   });
 
   testWidgets('Continue with a grant moves on to adding', (tester) async {
     await pump(tester, FakeDayRepository(), granted: false);
-    await tester.tap(find.text('Continue'));
+    await tester.tap(find.byKey(const Key('onboarding-continue')));
     await tester.pumpAndSettle();
-    expect(find.text('Add this network'), findsOneWidget);
-    expect(find.text(kLocationDeniedMessage), findsNothing);
+    expect(find.byKey(const Key('onboarding-add-network')), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Cue && w.spoken == kLocationDeniedMessage,
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('Continue with a refusal says so and offers settings', (
@@ -81,10 +87,15 @@ void main() {
       granted: false,
       requestGrants: false,
     );
-    await tester.tap(find.text('Continue'));
+    await tester.tap(find.byKey(const Key('onboarding-continue')));
     await tester.pumpAndSettle();
-    expect(find.text(kLocationDeniedMessage), findsOneWidget);
-    await tester.tap(find.text('Open app settings'));
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Cue && w.spoken == kLocationDeniedMessage,
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('onboarding-settings')));
     expect(settingsOpened, 1);
   });
 
@@ -93,7 +104,7 @@ void main() {
   ) async {
     final repo = FakeDayRepository();
     await pump(tester, repo);
-    await tester.tap(find.text('Add this network'));
+    await tester.tap(find.byKey(const Key('onboarding-add-network')));
     await tester.pumpAndSettle();
 
     expect((await repo.loadSettings()).workWifiSsids, const <String>{'Office'});
@@ -104,11 +115,14 @@ void main() {
   testWidgets('not on Wi-Fi stays open and says why', (tester) async {
     final repo = FakeDayRepository();
     await pump(tester, repo, picker: fakePicker(ssid: null));
-    await tester.tap(find.text('Add this network'));
+    await tester.tap(find.byKey(const Key('onboarding-add-network')));
     await tester.pumpAndSettle();
 
-    expect(find.text(kNotOnWifiMessage), findsOneWidget);
-    expect(find.text('Open app settings'), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is Cue && w.spoken == kNotOnWifiMessage),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('onboarding-settings')), findsNothing);
     expect(armedCalls, isEmpty);
   });
 
@@ -120,16 +134,24 @@ void main() {
       FakeDayRepository(),
       picker: fakePicker(granted: false, explainAccepted: false),
     );
-    await tester.tap(find.text('Add this network'));
+    await tester.tap(find.byKey(const Key('onboarding-add-network')));
     await tester.pumpAndSettle();
-    expect(find.text(kNotOnWifiMessage), findsNothing);
-    expect(find.text(kLocationDeniedMessage), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is Cue && w.spoken == kNotOnWifiMessage),
+      findsNothing,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Cue && w.spoken == kLocationDeniedMessage,
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('"not at work" skips without saving', (tester) async {
     final repo = FakeDayRepository();
     await pump(tester, repo);
-    await tester.tap(find.text("I'm not at work right now"));
+    await tester.tap(find.bySemanticsLabel("I'm not at work right now"));
     await tester.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
     expect(repo.savedSettings, isEmpty);
@@ -137,7 +159,7 @@ void main() {
 
   testWidgets('Skip on the explanation closes it', (tester) async {
     await pump(tester, FakeDayRepository(), granted: false);
-    await tester.tap(find.text('Skip'));
+    await tester.tap(find.bySemanticsLabel('Skip'));
     await tester.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
   });

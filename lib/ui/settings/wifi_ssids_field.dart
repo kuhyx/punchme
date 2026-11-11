@@ -3,6 +3,7 @@ library;
 
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/wifi/current_network_picker.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 
@@ -65,23 +66,37 @@ class _WifiSsidsFieldState extends State<WifiSsidsField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        OutlinedButton.icon(
+        IconButton(
+          key: const Key('add-current-network'),
           onPressed: _addCurrent,
-          icon: const Icon(Icons.wifi),
-          label: const Text('Add current network'),
+          icon: const Icon(Icons.wifi, semanticLabel: 'Add current network'),
         ),
         if (failure != null) ...<Widget>[
           const SizedBox(height: AppSpacing.sm),
-          Text(failure.message!),
+          Cue(
+            key: const Key('wifi-failure'),
+            icons: <IconData>[Icons.error_outline, failure.icon],
+            spoken: failure.message!,
+            color: Theme.of(context).colorScheme.error,
+          ),
           if (failure.needsSettings)
-            TextButton(
+            IconButton(
+              key: const Key('wifi-open-settings'),
               onPressed: widget.openSettings,
-              child: const Text('Open app settings'),
+              icon: const Icon(
+                Icons.settings,
+                semanticLabel: 'Open app settings',
+              ),
             ),
         ],
         const SizedBox(height: AppSpacing.sm),
         if (sorted.isEmpty)
-          const Text('No work Wi-Fi networks yet')
+          Icon(
+            Icons.wifi_off_outlined,
+            size: 64,
+            color: Theme.of(context).colorScheme.outline,
+            semanticLabel: 'No work Wi-Fi networks yet',
+          )
         else
           Wrap(
             spacing: AppSpacing.sm,

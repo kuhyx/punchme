@@ -25,8 +25,8 @@ void main() {
   group('initial state', () {
     testWidgets('offers CHECK IN when nothing is recorded', (tester) async {
       await pumpHome(tester, FakeDayRepository());
-      expect(find.text('CHECK IN'), findsOneWidget);
-      expect(find.text('Not checked in today'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
+      expect(find.byKey(const Key('summary-in')), findsNothing);
     });
 
     testWidgets('offers CHECK OUT when today is open', (tester) async {
@@ -38,8 +38,11 @@ void main() {
           ],
         ),
       );
-      expect(find.text('CHECK OUT'), findsOneWidget);
-      expect(find.textContaining('In 09:00'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('In 09:00'))),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows a sealed day with an Undo action', (tester) async {
@@ -55,9 +58,12 @@ void main() {
           ],
         ),
       );
-      expect(find.text('CHECKED OUT'), findsOneWidget);
-      expect(find.text('Undo'), findsOneWidget);
-      expect(find.textContaining('Out 17:00'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
+      expect(find.byKey(const Key('undo')), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('Out 17:00'))),
+        findsOneWidget,
+      );
     });
 
     testWidgets("ignores yesterday's entry when deciding today", (
@@ -75,7 +81,7 @@ void main() {
           ],
         ),
       );
-      expect(find.text('CHECK IN'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
     });
   });
 
@@ -88,7 +94,7 @@ void main() {
       await tester.pump();
 
       expect(repo.savedDays, isEmpty);
-      expect(find.text('tap again to cancel'), findsOneWidget);
+      expect(find.bySemanticsLabel('Tap again to cancel'), findsOneWidget);
 
       // Let the pending timer finish so the test ends cleanly.
       await tester.pump(commitWindow);
@@ -105,8 +111,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.savedDays, isEmpty);
-      expect(find.text('CHECK IN'), findsOneWidget);
-      expect(find.text('tap again to cancel'), findsNothing);
+      expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
+      expect(find.bySemanticsLabel('Tap again to cancel'), findsNothing);
     });
 
     testWidgets('records the FIRST tap time, not the commit time', (
@@ -140,7 +146,7 @@ void main() {
 
       expect(repo.savedDays.single.dateKey, '2026-08-25');
       expect(repo.savedDays.single.isOpen, isTrue);
-      expect(find.text('CHECK OUT'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
     });
 
     testWidgets('completing the window while open checks out', (tester) async {
@@ -156,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.savedDays.single.checkOut, clock);
-      expect(find.text('CHECKED OUT'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
     });
 
     testWidgets('a sealed day ignores taps', (tester) async {
@@ -176,7 +182,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.savedDays, isEmpty);
-      expect(find.text('CHECKED OUT'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
     });
   });
 
@@ -193,12 +199,12 @@ void main() {
       );
       await pumpHome(tester, repo);
 
-      await tester.tap(find.text('Undo'));
+      await tester.tap(find.byKey(const Key('undo')));
       await tester.pumpAndSettle();
 
       expect(repo.savedDays.single.checkOut, isNull);
-      expect(find.text('CHECK OUT'), findsOneWidget);
-      expect(find.text('Undo'), findsNothing);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
+      expect(find.byKey(const Key('undo')), findsNothing);
     });
   });
 }

@@ -46,7 +46,7 @@ in_replay_state() {
 has_non_pubspec_changes() {
     local staged
     staged="$(git diff --cached --name-only)"
-    [[ -n "$(grep -v -e '^$' -e 'pubspec\.yaml$' <<<"$staged")" ]]
+    grep -q -v -e '^$' -e 'pubspec\.yaml$' <<<"$staged"
 }
 
 main() {

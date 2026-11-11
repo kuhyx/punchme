@@ -125,6 +125,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // The default probe ran and found no session.
-    expect(find.text('Connect Google account'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('^Connect Google account')),
+      findsOneWidget,
+    );
   });
 }

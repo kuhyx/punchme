@@ -28,7 +28,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Add a network above to turn this on.'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Add a network above to turn this on.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('armed with nothing seen yet', (tester) async {
@@ -47,7 +50,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Not seen on a work network yet'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Not seen on a work network yet'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.check_circle), findsNWidgets(3));
     expect(find.byIcon(Icons.error), findsNothing);
   });
@@ -77,11 +83,14 @@ void main() {
       );
       await _pumpUntil(
         tester,
-        find.text('Last seen at work: 2026-08-25 17:05'),
+        find.bySemanticsLabel('Last seen at work: 2026-08-25 17:05'),
       );
     });
 
-    expect(find.text('Last seen at work: 2026-08-25 17:05'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Last seen at work: 2026-08-25 17:05'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.error), findsNWidgets(2));
   });
 
@@ -97,10 +106,16 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(home: WifiStatusCard(armed: true)),
       );
-      await _pumpUntil(tester, find.text('Not seen on a work network yet'));
+      await _pumpUntil(
+        tester,
+        find.bySemanticsLabel('Not seen on a work network yet'),
+      );
     });
 
-    expect(find.text('Not seen on a work network yet'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Not seen on a work network yet'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.error), findsNWidgets(3));
   });
 
@@ -148,7 +163,10 @@ void main() {
       const MaterialApp(home: WifiStatusCard(armed: false)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Add a network above to turn this on.'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Add a network above to turn this on.'),
+      findsOneWidget,
+    );
   });
 }
 

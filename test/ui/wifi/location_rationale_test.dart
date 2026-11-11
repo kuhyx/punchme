@@ -15,22 +15,23 @@ void main() {
 
   testWidgets('explains why, and what is never read', (tester) async {
     await open(tester);
-    expect(find.text('Why location?'), findsOneWidget);
-    expect(find.text(kLocationRationale), findsOneWidget);
-    expect(find.text(kLocationPromise), findsOneWidget);
-    expect(find.text(kBackgroundLocationHint), findsOneWidget);
+    expect(find.byKey(const Key('rationale-continue')), findsOneWidget);
+    expect(find.byKey(const Key('rationale-not-now')), findsOneWidget);
+    expect(find.bySemanticsLabel(kLocationRationale), findsOneWidget);
+    expect(find.bySemanticsLabel(kLocationPromise), findsOneWidget);
+    expect(find.bySemanticsLabel(kBackgroundLocationHint), findsOneWidget);
   });
 
   testWidgets('Continue answers true', (tester) async {
     final answer = await open(tester);
-    await tester.tap(find.text('Continue'));
+    await tester.tap(find.byKey(const Key('rationale-continue')));
     await tester.pumpAndSettle();
     expect(await answer, isTrue);
   });
 
   testWidgets('Not now answers false', (tester) async {
     final answer = await open(tester);
-    await tester.tap(find.text('Not now'));
+    await tester.tap(find.byKey(const Key('rationale-not-now')));
     await tester.pumpAndSettle();
     expect(await answer, isFalse);
   });

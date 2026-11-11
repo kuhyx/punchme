@@ -84,7 +84,7 @@ void main() {
     await pump(tester, repo);
 
     expect(repo.savedDays, isEmpty);
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 
   testWidgets('commits a warm tap delivered while running', (tester) async {
@@ -111,7 +111,10 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
 
-    expect(find.textContaining('via door tag'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('via door tag'))),
+      findsOneWidget,
+    );
     await tester.pumpAndSettle();
     await tester.pump(kPunchBannerDuration);
     await tester.pumpAndSettle();
@@ -156,6 +159,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('CHECK IN'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
   });
 }

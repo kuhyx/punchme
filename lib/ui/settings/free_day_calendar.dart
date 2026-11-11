@@ -49,20 +49,15 @@ class FreeDayCalendar extends StatelessWidget {
     final total = daysInMonth(month);
     return Column(
       children: <Widget>[
-        // Single letters, not `weekdayLabels` in full: the picker directly
-        // above already renders 'Mon'..'Sun', and a duplicate string would
-        // make every find-by-text in the tests ambiguous.
+        // Dot strips, as in History's header (textgate): no letters.
         Row(
           children: <Widget>[
-            for (final label in weekdayLabels)
+            for (var d = DateTime.monday; d <= DateTime.sunday; d++)
               Expanded(
                 child: Center(
-                  child: Text(
-                    label[0],
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: AppTextSize.caption,
-                    ),
+                  child: WeekdayGlyph(
+                    d,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

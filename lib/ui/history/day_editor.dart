@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
 /// The outcome of editing a day.
@@ -89,41 +90,50 @@ class _DayEditorState extends State<DayEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           ListTile(
-            title: const Text('Check in'),
+            key: const Key('check-in-tile'),
+            leading: const Icon(Icons.login, semanticLabel: 'Check in'),
             trailing: Text(clockLabel(_checkIn)),
             onTap: () => _pick(isCheckIn: true),
           ),
           ListTile(
-            title: const Text('Check out'),
+            key: const Key('check-out-tile'),
+            leading: const Icon(Icons.logout, semanticLabel: 'Check out'),
             trailing: Text(
-              _checkOut == null ? 'not set' : clockLabel(_checkOut!),
+              _checkOut == null ? '--:--' : clockLabel(_checkOut!),
+              semanticsLabel: _checkOut == null ? 'not set' : null,
             ),
             onTap: () => _pick(isCheckIn: false),
           ),
           if (_checkOut != null)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),
-              child: Text(
-                'Total ${durationLabel(worked ?? Duration.zero)}',
+              child: IconValue(
+                key: const Key('day-total'),
+                icon: Icons.timelapse,
+                value: durationLabel(worked ?? Duration.zero),
+                spoken: 'Total ${durationLabel(worked ?? Duration.zero)}',
                 style: TextStyle(color: Theme.of(context).colorScheme.primary),
               ),
             ),
         ],
       ),
       actions: <Widget>[
-        TextButton(
+        IconButton(
+          key: const Key('day-delete'),
+          icon: const Icon(Icons.delete_outline, semanticLabel: 'Delete'),
           onPressed: () => Navigator.of(
             context,
           ).pop(DayEdit(entry: widget.entry, delete: true)),
-          child: const Text('Delete'),
         ),
-        TextButton(
+        IconButton(
+          key: const Key('day-cancel'),
+          icon: const Icon(Icons.close, semanticLabel: 'Cancel'),
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
         ),
-        FilledButton(
+        IconButton(
+          key: const Key('day-save'),
+          icon: const Icon(Icons.check, semanticLabel: 'Save'),
           onPressed: () => Navigator.of(context).pop(DayEdit(entry: _result)),
-          child: const Text('Save'),
         ),
       ],
     );

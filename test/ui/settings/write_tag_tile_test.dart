@@ -25,7 +25,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final tile = find.text('Write clock tag');
+    final tile = find.byKey(const Key('write-tag'));
     await tester.scrollUntilVisible(
       tile,
       200,

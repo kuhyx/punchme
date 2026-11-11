@@ -46,6 +46,13 @@ class CheckButton extends StatelessWidget {
     }
   }
 
+  /// The pictogram painted for [state]: door in, door out, done.
+  static IconData iconFor(DayState state) => switch (state) {
+    DayState.readyToCheckIn => Icons.login,
+    DayState.checkedIn => Icons.logout,
+    DayState.checkedOut => Icons.task_alt,
+  };
+
   /// Whether [state] accepts a tap at all.
   static bool isEnabledFor(DayState state) => state != DayState.checkedOut;
 
@@ -69,6 +76,7 @@ class CheckButton extends StatelessWidget {
         : scheme.onPrimary;
 
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: pending ? 'Tap again to cancel' : labelFor(state),
@@ -86,24 +94,19 @@ class CheckButton extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text(
-                        labelFor(state),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: foreground,
-                          fontSize: AppTextSize.display,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                        ),
+                      Icon(
+                        iconFor(state),
+                        key: const Key('check-glyph'),
+                        color: foreground,
+                        size: AppTextSize.display * 3,
                       ),
                       if (pending) ...<Widget>[
                         const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'tap again to cancel',
-                          style: TextStyle(
-                            color: foreground,
-                            fontSize: AppTextSize.label,
-                          ),
+                        Icon(
+                          Icons.undo,
+                          key: const Key('check-cancel-glyph'),
+                          color: foreground,
+                          size: AppTextSize.display,
                         ),
                       ],
                     ],

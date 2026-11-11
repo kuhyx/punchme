@@ -74,13 +74,17 @@ void main() {
       await checkIn(tester);
 
       // 4 minutes short on Tuesday => 8h04m today, so 09:00 + 8h04m.
-      expect(find.text('Checked in'), findsOneWidget);
+      expect(find.byKey(const Key('alarm-title')), findsOneWidget);
       expect(
-        find.textContaining('Work 8h 04m today, until 17:04.'),
+        find.bySemanticsLabel(
+          RegExp(RegExp.escape('Work 8h 04m today, until 17:04.')),
+        ),
         findsOneWidget,
       );
       expect(
-        find.textContaining('0h 04m behind this week — all today.'),
+        find.bySemanticsLabel(
+          RegExp(RegExp.escape('0h 04m behind this week — all today.')),
+        ),
         findsOneWidget,
       );
     });
@@ -91,12 +95,11 @@ void main() {
         FakeDayRepository(days: <DayEntry>[tuesday()], settings: settings),
       );
       await checkIn(tester);
-      await tester.tap(find.text('Set alarm'));
+      await tester.tap(find.byKey(const Key('alarm-set')));
       await tester.pumpAndSettle();
 
       expect(alarms, hasLength(1));
       expect(alarms.single.at, DateTime(2026, 8, 26, 17, 4));
-      expect(alarms.single.message, contains('check out'));
     });
 
     testWidgets('declining sets no alarm', (tester) async {
@@ -105,7 +108,7 @@ void main() {
         FakeDayRepository(days: <DayEntry>[tuesday()], settings: settings),
       );
       await checkIn(tester);
-      await tester.tap(find.text('Not now'));
+      await tester.tap(find.byKey(const Key('alarm-not-now')));
       await tester.pumpAndSettle();
 
       expect(alarms, isEmpty);
@@ -119,10 +122,13 @@ void main() {
         FakeDayRepository(days: <DayEntry>[tuesday()], settings: settings),
       );
       await checkIn(tester);
-      await tester.tap(find.text('Not now'));
+      await tester.tap(find.byKey(const Key('alarm-not-now')));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Until 17:04'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape('Until 17:04'))),
+        findsOneWidget,
+      );
     });
 
     testWidgets('checking OUT does not propose an alarm', (tester) async {
@@ -135,7 +141,7 @@ void main() {
       await pump(tester, repo);
       await checkIn(tester); // this is a check-OUT
 
-      expect(find.text('Checked in'), findsNothing);
+      expect(find.byKey(const Key('alarm-title')), findsNothing);
       expect(alarms, isEmpty);
     });
   });
@@ -146,7 +152,7 @@ void main() {
       await pump(tester, FakeDayRepository(settings: settings));
       await checkIn(tester);
 
-      expect(find.text('Checked in'), findsNothing);
+      expect(find.byKey(const Key('alarm-title')), findsNothing);
       expect(alarms, isEmpty);
     });
   });
@@ -164,13 +170,17 @@ void main() {
     );
     await checkIn(tester);
 
-    expect(find.text('Checked in'), findsOneWidget);
+    expect(find.byKey(const Key('alarm-title')), findsOneWidget);
     expect(
-      find.textContaining('Work 7h 30m today, until 16:30.'),
+      find.bySemanticsLabel(
+        RegExp(RegExp.escape('Work 7h 30m today, until 16:30.')),
+      ),
       findsOneWidget,
     );
     expect(
-      find.text('1h 00m ahead (tightest: week) — spread over 2 days.'),
+      find.bySemanticsLabel(
+        '1h 00m ahead (tightest: week) — spread over 2 days.',
+      ),
       findsOneWidget,
     );
   });
@@ -181,7 +191,9 @@ void main() {
     await checkIn(tester);
 
     expect(
-      find.textContaining('Work 8h 00m today, until 17:00.'),
+      find.bySemanticsLabel(
+        RegExp(RegExp.escape('Work 8h 00m today, until 17:00.')),
+      ),
       findsOneWidget,
     );
   });

@@ -40,9 +40,18 @@ void main() {
     await pump(tester, probe: () async => false);
     await tester.pumpAndSettle();
 
-    expect(find.text('Connect Google account'), findsOneWidget);
     expect(
-      find.text('Until this is connected, hours stay on this device only.'),
+      find.bySemanticsLabel(RegExp('^Connect Google account')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(
+        RegExp(
+          RegExp.escape(
+            'Until this is connected, hours stay on this device only.',
+          ),
+        ),
+      ),
       findsOneWidget,
     );
     expect(find.byIcon(Icons.cloud_off), findsOneWidget);
@@ -52,7 +61,7 @@ void main() {
     await pump(tester, probe: () async => true);
     await tester.pumpAndSettle();
 
-    expect(find.text('Sync connected'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('^Sync connected')), findsOneWidget);
     expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
   });
 
@@ -68,10 +77,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sync connected'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('^Sync connected')), findsOneWidget);
   });
 
   testWidgets('a dismissed picker leaves it not connected', (tester) async {
@@ -87,12 +96,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
 
     expect(attempts, 1);
     // Backing out is a choice, not an error: no snackbar, no state change.
-    expect(find.text('Connect Google account'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp('^Connect Google account')),
+      findsOneWidget,
+    );
     expect(find.byType(SnackBar), findsNothing);
   });
 
@@ -104,12 +116,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
 
     // A misconfiguration the user has to see -- silently staying on "Not
     // connected" is what made this whole tile necessary.
-    expect(find.textContaining('Sign-in failed'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Sign-in failed'))),
+      findsOneWidget,
+    );
     expect(find.textContaining('wrong uid'), findsOneWidget);
   });
 
@@ -122,7 +137,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
 
     // The exact on-device failure this tile was blind to: Google's own words
@@ -142,9 +157,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Retry'));
+    await tester.tap(find.bySemanticsLabel('Retry'));
     await tester.pumpAndSettle();
 
     expect(attempts, 2);
@@ -160,11 +175,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Connect Google account'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Connect Google account')));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('no session was stored'), findsOneWidget);
-    expect(find.text('Connect Google account'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('no session was stored'))),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp('^Connect Google account')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an already-connected tile is not tappable', (tester) async {
@@ -179,7 +200,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Sync connected'));
+    await tester.tap(find.bySemanticsLabel(RegExp('^Sync connected')));
     await tester.pumpAndSettle();
 
     expect(attempts, isZero);

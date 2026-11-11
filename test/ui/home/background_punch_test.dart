@@ -59,9 +59,9 @@ void main() {
 
     // No window: the phone may relock before 3s elapses, so waiting would
     // risk losing the punch entirely.
-    expect(find.text('tap again to cancel'), findsNothing);
+    expect(find.bySemanticsLabel('Tap again to cancel'), findsNothing);
     expect(repo.savedDays.single.checkIn, clock);
-    expect(find.text('CHECK OUT'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
   });
 
   testWidgets('never raises the alarm dialog', (tester) async {
@@ -92,7 +92,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.savedDays.single.checkOut, clock);
-    expect(find.text('CHECKED OUT'), findsOneWidget);
+    expect(find.bySemanticsLabel('CHECKED OUT'), findsOneWidget);
   });
 
   testWidgets('holds the banner until the app is resumed', (tester) async {
@@ -105,13 +105,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.savedDays, hasLength(1));
-    expect(find.textContaining('Checked IN'), findsNothing);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Checked IN'))),
+      findsNothing,
+    );
 
     handlers.onResume();
     await tester.pump();
 
-    expect(find.textContaining('Checked IN'), findsOneWidget);
-    expect(find.textContaining('via desk tag'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Checked IN'))),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('via desk tag'))),
+      findsOneWidget,
+    );
 
     // Let it time out: a bar still on screen at teardown leaves a pending
     // dismiss animation that asserts into the *next* test's first frame.
@@ -130,7 +139,10 @@ void main() {
     await handlers.onBackgroundPunch!(const PunchTag(label: 'desk'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Checked IN'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(RegExp.escape('Checked IN'))),
+      findsOneWidget,
+    );
 
     // Nothing was held back, so a later resume adds no second bar. Counted
     // rather than waited out: what matters is that one banner exists, not
@@ -192,7 +204,10 @@ void main() {
     expect(repo.savedDays, isEmpty);
     handlers.onResume();
     await tester.pump();
-    expect(find.text('Ignored: you punched moments ago'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Ignored: you punched moments ago'),
+      findsOneWidget,
+    );
     await drainBanner(tester);
   });
 

@@ -4,6 +4,8 @@ library;
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/logic/balance.dart';
+import 'package:punchme/models/horizon.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/home/today_summary.dart';
 
 /// Formats [duration] with an explicit sign, e.g. `+2h 30m` or `-45m`.
@@ -15,16 +17,16 @@ String signedDurationLabel(Duration duration) {
 
 /// A card showing one period's balance.
 class BalanceCard extends StatelessWidget {
-  /// Creates a card labelled [title] for [balance].
+  /// Creates the [horizon] card for [balance].
   const BalanceCard({
-    required this.title,
+    required this.horizon,
     required this.balance,
     this.infoOnly = false,
     super.key,
   });
 
-  /// The period's name, e.g. `This week`.
-  final String title;
+  /// Which period: drawn as a calendar plus its length in days.
+  final Horizon horizon;
 
   /// The computed balance for the period.
   final Balance balance;
@@ -52,22 +54,35 @@ class BalanceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              infoOnly ? '$title · Info only' : title,
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: AppTextSize.label,
-              ),
+            Row(
+              children: <Widget>[
+                HorizonGlyph(
+                  horizon,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: AppTextSize.label,
+                  ),
+                ),
+                if (infoOnly) ...<Widget>[
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    Icons.info_outline,
+                    key: const Key('info-only'),
+                    size: AppTextSize.label * 1.1,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    semanticLabel: 'Info only',
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: AppSpacing.sm),
             if (settled)
-              Text(
-                'On track',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: AppTextSize.display,
-                  fontWeight: FontWeight.w700,
-                ),
+              Icon(
+                Icons.check_circle_outline,
+                key: const Key('on-track'),
+                color: theme.colorScheme.onSurface,
+                size: AppTextSize.display * 1.4,
+                semanticLabel: 'On track',
               )
             else
               Align(
@@ -85,9 +100,14 @@ class BalanceCard extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Worked ${durationLabel(balance.worked)} of '
-              '${durationLabel(balance.quota)}',
+            IconValue(
+              icon: Icons.work_outline,
+              value:
+                  '${durationLabel(balance.worked)} / '
+                  '${durationLabel(balance.quota)}',
+              spoken:
+                  'Worked ${durationLabel(balance.worked)} of '
+                  '${durationLabel(balance.quota)}',
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontSize: AppTextSize.label,
@@ -95,8 +115,10 @@ class BalanceCard extends StatelessWidget {
             ),
             if (balance.todaySoFar > Duration.zero) ...<Widget>[
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Today so far ${durationLabel(balance.todaySoFar)}',
+              IconValue(
+                icon: Icons.today,
+                value: durationLabel(balance.todaySoFar),
+                spoken: 'Today so far ${durationLabel(balance.todaySoFar)}',
                 style: TextStyle(
                   color: theme.colorScheme.primary,
                   fontSize: AppTextSize.label,

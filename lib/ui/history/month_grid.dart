@@ -44,17 +44,11 @@ class MonthGrid extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              for (final label in weekdayLabels)
+              for (var d = DateTime.monday; d <= DateTime.sunday; d++)
                 Expanded(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        color: muted,
-                        fontSize: AppTextSize.label,
-                      ),
-                    ),
+                    child: WeekdayGlyph(d, color: muted),
                   ),
                 ),
             ],

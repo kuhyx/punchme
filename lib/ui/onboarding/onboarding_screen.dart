@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:punchme/data/day_repository.dart';
+import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/wifi/current_network_picker.dart';
 import 'package:punchme/ui/wifi/location_rationale.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
@@ -105,40 +106,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Clock in automatically')),
+    appBar: AppBar(),
     body: SafeArea(
       child: switch (_step) {
         _Step.loading => const Center(child: CircularProgressIndicator()),
         _Step.explain => _page(
           children: const <Widget>[LocationRationale()],
           primary: FilledButton(
+            key: const Key('onboarding-continue'),
             onPressed: _continue,
-            child: const Text('Continue'),
+            child: const Icon(Icons.arrow_forward, semanticLabel: 'Continue'),
           ),
+          skipIcon: Icons.skip_next,
           skipLabel: 'Skip',
         ),
         _Step.addNetwork => _page(
           children: <Widget>[
-            const Text(
-              'Connect this phone to your work Wi-Fi, then add it. punchme '
-              'will clock you in the first time each day it sees that '
-              'network.',
+            const Icon(
+              Icons.wifi_tethering,
+              size: 64,
+              semanticLabel: 'Clock in automatically',
             ),
             if (_failure case final failure?) ...<Widget>[
               const SizedBox(height: AppSpacing.md),
-              Text(failure.message!),
+              // The failure sentence stays spoken-only; the icon shows it.
+              Cue(
+                key: const Key('onboarding-failure'),
+                icons: <IconData>[Icons.error_outline, failure.icon],
+                spoken: failure.message!,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               if (failure.needsSettings)
-                TextButton(
+                IconButton(
+                  key: const Key('onboarding-settings'),
                   onPressed: widget.openSettings,
-                  child: const Text('Open app settings'),
+                  icon: const Icon(
+                    Icons.settings,
+                    semanticLabel: 'Open app settings',
+                  ),
                 ),
             ],
           ],
-          primary: FilledButton.icon(
+          primary: FilledButton(
+            key: const Key('onboarding-add-network'),
             onPressed: _addCurrent,
-            icon: const Icon(Icons.wifi),
-            label: const Text('Add this network'),
+            child: const Icon(Icons.add, semanticLabel: 'Add this network'),
           ),
+          skipIcon: Icons.work_off_outlined,
           skipLabel: "I'm not at work right now",
         ),
       },
@@ -148,6 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _page({
     required List<Widget> children,
     required Widget primary,
+    required IconData skipIcon,
     required String skipLabel,
   }) => Padding(
     padding: const EdgeInsets.all(AppSpacing.md),
@@ -163,7 +179,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
         primary,
-        TextButton(onPressed: _skip, child: Text(skipLabel)),
+        IconButton(
+          key: const Key('onboarding-skip'),
+          onPressed: _skip,
+          icon: Icon(skipIcon, semanticLabel: skipLabel),
+        ),
       ],
     ),
   );

@@ -47,13 +47,13 @@ void main() {
       await tester.pump();
       // The cancel window applies to a tap exactly as it does to a press.
       expect(repo.savedDays, isEmpty);
-      expect(find.text('tap again to cancel'), findsOneWidget);
+      expect(find.bySemanticsLabel('Tap again to cancel'), findsOneWidget);
 
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
 
       expect(repo.savedDays.single.checkIn, clock);
-      expect(find.text('CHECK OUT'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
     });
 
     testWidgets('records the tap time, not the commit time', (tester) async {
@@ -85,11 +85,17 @@ void main() {
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
 
-      expect(find.text('Checked OUT 17:03 via desk tag'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Checked OUT 17:03 via desk tag'),
+        findsOneWidget,
+      );
       // The summary shows its own Undo once the day is sealed, so scope the
       // search to the banner's action rather than counting them globally.
       expect(
-        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.byKey(const Key('snack-undo')),
+        ),
         findsOneWidget,
       );
     });
@@ -106,11 +112,11 @@ void main() {
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
 
-      expect(find.text('Checked IN 09:03 via desk tag'), findsOneWidget);
       expect(
-        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
+        find.bySemanticsLabel('Checked IN 09:03 via desk tag'),
         findsOneWidget,
       );
+      await tester.tap(find.byKey(const Key('snack-undo')));
     });
 
     testWidgets('Undo on a check-in banner removes the day entirely', (
@@ -124,13 +130,11 @@ void main() {
       await handlers.onPunch(const PunchTag(label: 'desk'));
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
-      await tester.tap(
-        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
-      );
+      await tester.tap(find.byKey(const Key('snack-undo')));
       await tester.pumpAndSettle();
 
       expect(repo.deletedKeys, hasLength(1));
-      expect(find.text('CHECK IN'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK IN'), findsOneWidget);
     });
 
     testWidgets('Undo reopens the day the tap sealed', (tester) async {
@@ -145,12 +149,10 @@ void main() {
       await handlers.onPunch(const PunchTag(label: 'desk'));
       await tester.pump(commitWindow);
       await tester.pumpAndSettle();
-      await tester.tap(
-        find.descendant(of: find.byType(SnackBar), matching: find.text('Undo')),
-      );
+      await tester.tap(find.byKey(const Key('snack-undo')));
       await tester.pumpAndSettle();
 
-      expect(find.text('CHECK OUT'), findsOneWidget);
+      expect(find.bySemanticsLabel('CHECK OUT'), findsOneWidget);
       expect(repo.savedDays.last.checkOut, isNull);
     });
   });
