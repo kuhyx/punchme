@@ -17,6 +17,24 @@ readonly REPO="${PUNCHME_REPO:-$HOME/src/punchme}"
 readonly PKG="com.kuhy.punchme"
 readonly SERIAL="${ADB_SERIAL:-23181JEGR08034}"
 readonly HEALTH_EXIT=50
+# phone_deploy refuses (exit 48) above PHONE_DEPLOY_MAX_LOAD; Ship runs this
+# right after a push, often while other builds still load the box, so wait
+# for headroom (bounded) instead of failing on a transient spike.
+readonly MAX_LOAD="${PHONE_DEPLOY_MAX_LOAD:-40}"
+readonly LOAD_WAIT_SECS="${DEPLOY_LOAD_WAIT_SECS:-1200}"
+
+wait_for_load() {
+    local waited=0 load
+    while :; do
+        read -r load _ </proc/loadavg
+        awk -v l="$load" -v m="$MAX_LOAD" 'BEGIN { exit !(l < m) }' && return 0
+        (( waited >= LOAD_WAIT_SECS )) && return 0  # let phone_deploy refuse loudly
+        sleep 15
+        waited=$((waited + 15))
+    done
+}
+
+wait_for_load
 
 ADB_SERIAL="$SERIAL" bash "$HOME/.claude/scripts/phone_deploy.sh" "$REPO" --release --flavor daily
 
