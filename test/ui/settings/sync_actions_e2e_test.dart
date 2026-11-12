@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
 import 'package:punchme/ui/settings/sync_actions.dart';
+import 'package:punchme/ui/settings/sync_lock_button.dart';
 
 /// Covers the icon-only passphrase button on the sync tile: it shows the
 /// lock state the last tick published and retries the sync once a
@@ -24,8 +25,11 @@ void main() {
           body: SyncActions(
             probe: () async => connected,
             connect: () async => GoogleSignInStatus.succeeded,
-            locked: locked,
-            onPassphraseSaved: onSaved,
+            lockButton: SyncLockButton(
+              key: button,
+              locked: locked,
+              onSaved: onSaved,
+            ),
           ),
         ),
       ),

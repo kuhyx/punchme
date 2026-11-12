@@ -5,12 +5,12 @@ import 'dart:async';
 
 import 'package:crdt_sync_flutter/crdt_sync_flutter.dart';
 import 'package:design_system/design_system.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';
+import 'package:punchme/ui/settings/sync_lock_button.dart';
 
 /// The project's **Web** OAuth client id.
 ///
@@ -92,8 +92,7 @@ class SyncActions extends StatefulWidget {
   const SyncActions({
     this.probe = probeSyncSession,
     this.connect = connectSyncAccount,
-    this.locked,
-    this.onPassphraseSaved,
+    this.lockButton = const SyncLockButton(key: Key('e2e-passphrase')),
     super.key,
   });
 
@@ -103,12 +102,8 @@ class SyncActions extends StatefulWidget {
   /// Performs the interactive sign-in.
   final SyncConnect connect;
 
-  /// Whether the last tick found encryption locked; defaults to the one the
-  /// sync tick publishes.
-  final ValueListenable<bool>? locked;
-
-  /// Runs after a passphrase is saved; defaults to retrying the sync.
-  final Future<void> Function()? onPassphraseSaved;
+  /// Shown once connected; only tests pass another.
+  final Widget lockButton;
 
   @override
   State<SyncActions> createState() => _SyncActionsState();
@@ -236,19 +231,7 @@ class _SyncActionsState extends State<SyncActions> {
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              // Icon only (textgate): opens the hidden passphrase field the
-              // end-to-end encryption key is derived from.
-              if (_connected)
-                ValueListenableBuilder<bool>(
-                  valueListenable: widget.locked ?? e2eLocked,
-                  builder: (_, locked, _) => E2ePassphraseButton(
-                    key: const Key('e2e-passphrase'),
-                    locked: locked,
-                    onSaved: () => unawaited(
-                      (widget.onPassphraseSaved ?? resyncAfterPassphrase)(),
-                    ),
-                  ),
-                ),
+              if (_connected) widget.lockButton,
               Icon(_connected ? Icons.cloud_done_outlined : Icons.cloud_off),
             ],
           ),
