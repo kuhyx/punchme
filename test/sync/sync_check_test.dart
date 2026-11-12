@@ -2,9 +2,13 @@ import 'dart:convert';
 
 import 'package:crdt_sync/crdt_sync.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:punchme/models/day_entry.dart';
+import 'package:punchme/sync/crdt_day_repository.dart';
 import 'package:punchme/sync/sync_check.dart';
 import 'package:punchme/sync/sync_service.dart';
 
+import 'e2e_keystore.dart';
+import 'fake_log_persistence.dart';
 import 'fake_remote_store.dart';
 
 /// Covers the check that makes a green tile mean something.
@@ -14,12 +18,28 @@ import 'fake_remote_store.dart';
 /// report has to distinguish "synced and the record is really there" from
 /// "reported connected while the remote holds nothing".
 void main() {
-  const path = 'punchme/daily/devices/device-a/log.json';
+  const path = 'punchme/daily/devices-e2e/device-a/log.json';
+
+  /// A remote holding device-a's real, encrypted push of one day.
+  Future<FakeRemoteStore> pushedOneDay() async {
+    final store = await openFakeStore(nodeId: 'device-a');
+    await CrdtDayRepository(store: store).saveDay(
+      DayEntry(dateKey: '2026-08-25', checkIn: DateTime(2026, 8, 25, 10)),
+    );
+    final remote = FakeRemoteStore();
+    await syncNow(
+      store: store,
+      deviceId: 'device-a',
+      openClient: () async => remote,
+      pathPrefix: 'punchme/daily/devices',
+    );
+    return remote;
+  }
+
+  setUp(installE2eKeystore);
 
   test('reports the record the remote actually holds', () async {
-    final remote = FakeRemoteStore(<String, String>{
-      path: jsonEncode(<String, dynamic>{'2026-08-25': <String, dynamic>{}}),
-    });
+    final remote = await pushedOneDay();
 
     final check = await runSyncCheck(
       sync: () async => SyncOutcome.synced,
@@ -71,8 +91,25 @@ void main() {
     expect(report['present'], isFalse);
   });
 
+  test('a locked device reports nothing stored', () async {
+    final remote = await pushedOneDay();
+    installE2eKeystore(withPassphrase: false);
+
+    final check = await runSyncCheck(
+      sync: () async => SyncOutcome.locked,
+      openClient: () async => remote,
+      deviceId: 'device-a',
+      pathPrefix: 'punchme/daily/devices',
+    );
+
+    final report = jsonDecode(check.toJson()) as Map<String, dynamic>;
+    expect(report['outcome'], 'locked');
+    expect(report['present'], isFalse);
+  });
+
   test('a non-map payload counts no records rather than throwing', () async {
-    final remote = FakeRemoteStore(<String, String>{path: '[]'});
+    final remote = await pushedOneDay();
+    remote.files[path] = '[]';
 
     final check = await runSyncCheck(
       sync: () async => SyncOutcome.synced,
@@ -95,7 +132,7 @@ void main() {
 
     // Derived from the adopted MIME, so the sandbox flavor cannot report on
     // the daily build's records.
-    expect(check.path, '${syncPathPrefix()}/device-a/log.json');
+    expect(check.path, '${syncPathPrefix()}-e2e/device-a/log.json');
   });
 
   test('the report never carries a credential', () async {

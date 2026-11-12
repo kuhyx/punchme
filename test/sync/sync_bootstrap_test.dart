@@ -8,6 +8,7 @@ import 'package:punchme/models/settings.dart';
 import 'package:punchme/sync/sync_bootstrap.dart';
 import 'package:punchme/sync/sync_service.dart';
 
+import 'e2e_keystore.dart';
 import 'fake_remote_store.dart';
 
 /// Covers the composition root, and the order it does things in.
@@ -17,7 +18,10 @@ import 'fake_remote_store.dart';
 void main() {
   late Directory dir;
 
-  setUp(() => dir = Directory.systemTemp.createTempSync('punchme_sync'));
+  setUp(() {
+    installE2eKeystore();
+    dir = Directory.systemTemp.createTempSync('punchme_sync');
+  });
   tearDown(() => dir.deleteSync(recursive: true));
 
   Future<DeviceIdentity> identity() async =>
@@ -105,7 +109,7 @@ void main() {
     expect(outcome, SyncOutcome.synced);
     // The record has to be in the pushed payload; an empty first push would
     // read as "this device has nothing", which is not what happened.
-    expect(remote.files.values.single, contains('2026-08-25'));
+    expect(remote.files[_log], contains('2026-08-25'));
   });
 
   test('works, unsynced, when the device is not enrolled', () async {
@@ -143,11 +147,23 @@ void main() {
     await synced.repository.saveDay(
       DayEntry(dateKey: '2026-08-27', checkIn: DateTime(2026, 8, 27, 9)),
     );
-    // The push is deliberately not awaited by the caller, so let the
-    // microtask it was queued on run.
-    await Future<void>.delayed(Duration.zero);
+    // The push is deliberately not awaited by the caller, so wait for it.
+    await _until(() => remote.files.containsKey(_log));
 
-    expect(remote.files.values.single, contains('2026-08-27'));
+    expect(remote.files[_log], contains('2026-08-27'));
+  });
+
+  test('saving a passphrase retries the sync', () async {
+    final remote = FakeRemoteStore();
+    await openSyncedStore(
+      directory: dir,
+      openClient: () async => remote,
+      identity: identity,
+    );
+
+    await resyncAfterPassphrase();
+
+    expect(remote.files, contains(_log));
   });
 
   test('a failing push does not take down the write', () async {
@@ -165,4 +181,15 @@ void main() {
     // Local durability is what matters; the network is best-effort.
     expect(await synced.repository.loadDays(), hasLength(1));
   });
+}
+
+/// Where device-a's encrypted log lands on the daily flavor.
+const String _log = 'punchme/daily/devices-e2e/device-a/log.json';
+
+/// Polls [done] until it holds; the fire-and-forget push is several awaits
+/// deep (key derivation, header, copy) so one microtask turn is not enough.
+Future<void> _until(bool Function() done) async {
+  for (var i = 0; i < 200 && !done(); i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
 }

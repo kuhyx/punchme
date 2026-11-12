@@ -65,25 +65,29 @@ class SyncCheck {
 
 /// Syncs, then reads back what this device's own record now contains.
 ///
-/// The read goes through the same [RemoteStore] the push used, so a report
-/// saying "present" cannot be true of a different backend than the one the
-/// app writes to.
+/// The read goes through the same [RemoteStore] the push used, decrypted by
+/// the same key, so a report saying "present" cannot be true of a different
+/// backend than the one the app writes to. The path is the encrypted
+/// `<prefix>-e2e` one; a locked device reports nothing stored.
 Future<SyncCheck> runSyncCheck({
   required Future<SyncOutcome> Function() sync,
   required Future<RemoteStore?> Function() openClient,
   required String deviceId,
   String? pathPrefix,
+  E2eOpener openE2e = openE2eFromKeystore,
 }) async {
   final outcome = await sync();
-  final path = '${pathPrefix ?? syncPathPrefix()}/$deviceId/log.json';
+  final oldPrefix = pathPrefix ?? syncPathPrefix();
+  final path = '${E2eLayout.of(oldPrefix).prefix}/$deviceId/log.json';
   final client = await openClient();
+  // Not reachable when the device holds no session or no key, which the
+  // outcome already reports; reading through a null client would be an error
+  // the report cannot express.
+  final e2e = client == null ? null : await openE2e(client, oldPrefix);
   return SyncCheck(
     outcome: outcome,
     deviceId: deviceId,
     path: path,
-    // Not reachable when the device holds no session, which the outcome
-    // already reports; reading through a null client would be an error the
-    // report cannot express.
-    remote: client == null ? null : await client.getFileText(path),
+    remote: e2e is E2eReady ? await e2e.store.getFileText(path) : null,
   );
 }

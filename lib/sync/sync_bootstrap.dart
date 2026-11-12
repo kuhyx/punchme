@@ -74,6 +74,10 @@ Future<SyncedStore> openSyncedStore({
 
   Future<SyncOutcome> tick() =>
       syncNow(store: store, deviceId: me.deviceId, openClient: open);
+  // The settings lock icon retries through this once a passphrase is saved.
+  resyncAfterPassphrase = () async {
+    await tick();
+  };
 
   return SyncedStore(
     deviceId: me.deviceId,

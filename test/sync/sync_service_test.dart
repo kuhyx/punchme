@@ -6,6 +6,7 @@ import 'package:punchme/sync/crdt_day_repository.dart';
 import 'package:punchme/sync/day_record_codec.dart';
 import 'package:punchme/sync/sync_service.dart';
 
+import 'e2e_keystore.dart';
 import 'fake_log_persistence.dart';
 import 'fake_remote_store.dart';
 
@@ -18,6 +19,7 @@ void main() {
   DayEntry openDay(String key) =>
       DayEntry(dateKey: key, checkIn: DateTime(2026, 8, 25, 10, 29));
 
+  setUp(installE2eKeystore);
   tearDown(() => activePunchMime = kPunchMime);
 
   group('syncPathPrefix', () {
@@ -72,7 +74,7 @@ void main() {
       expect(outcome, SyncOutcome.synced);
       expect(
         remote.writes,
-        contains(startsWith('punchme/daily/devices/device-a')),
+        contains(startsWith('punchme/daily/devices-e2e/device-a')),
       );
     });
 
@@ -137,8 +139,8 @@ void main() {
       );
 
       expect(
-        remote.writes.single,
-        startsWith('punchme/sandbox/devices/device-a'),
+        remote.writes,
+        contains(startsWith('punchme/sandbox/devices-e2e/device-a')),
       );
     });
   });
