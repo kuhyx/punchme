@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Firebase sync. Release builds read only src/main, so without this the
+         sync tick dies on a DNS lookup while debug builds still work. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Handing the target check-out time to the system Clock app via
          ACTION_SET_ALARM. Without this the intent throws a PlatformException
          ("Permission Denial ... requires com.android.alarm.permission.SET_ALARM")
