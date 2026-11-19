@@ -26,10 +26,14 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-readonly REPO_ROOT
-readonly HOOK="$REPO_ROOT/.git/hooks/pre-commit"
+# --git-path, not $REPO_ROOT/.git/hooks: in a linked worktree .git is a file,
+# and the hooks live in the main checkout's git dir.
+HOOKS_DIR="$(git rev-parse --path-format=absolute --git-path hooks)"
+readonly HOOKS_DIR
+readonly HOOK="$HOOKS_DIR/pre-commit"
+readonly GENERATED="$HOOKS_DIR/pre-commit.pre-commit-generated"
 readonly LEGACY_MARKER='bump_patch_version.sh'
+readonly WRAPPER_MARKER='Installed by scripts/install_hooks.sh'
 
 # The old hand-written hook has to go before pre-commit will install over it;
 # pre-commit refuses to clobber a foreign hook.
@@ -57,8 +61,13 @@ ensure_pre_commit() {
 # and only on success. pre-commit install --hook-type pre-commit writes the
 # generated script; we move it aside and call it from ours.
 install_wrapper() {
-    local generated="$REPO_ROOT/.git/hooks/pre-commit.pre-commit-generated"
-    mv "$HOOK" "$generated"
+    mv "$HOOK" "$GENERATED"
+    write_wrapper
+}
+
+# The wrapper finds the generated hook next to itself ($0), so it works from
+# the main checkout and from every linked worktree alike.
+write_wrapper() {
     cat > "$HOOK" <<'HOOK_BODY'
 #!/bin/bash
 # Installed by scripts/install_hooks.sh — see that file for why the version
@@ -69,7 +78,7 @@ readonly ROOT
 
 # The read-only gates. A non-zero exit here rejects the commit, and the bump
 # below never runs, so a rejected attempt leaves no stray version change.
-"$ROOT/.git/hooks/pre-commit.pre-commit-generated" "$@"
+"$(dirname "$0")/pre-commit.pre-commit-generated" "$@"
 
 exec bash "$ROOT/scripts/bump_patch_version.sh"
 HOOK_BODY
@@ -77,6 +86,14 @@ HOOK_BODY
 }
 
 main() {
+    # Rerun over an installed wrapper: only refresh the wrapper. Running
+    # `pre-commit install` again would demote the wrapper to pre-commit.legacy,
+    # which the generated hook then calls -- an endless wrapper/generated loop.
+    if [[ -f "$HOOK" && -f "$GENERATED" ]] && grep -q "$WRAPPER_MARKER" "$HOOK"; then
+        write_wrapper
+        echo "Refreshed the pre-commit wrapper: $HOOK"
+        return
+    fi
     ensure_pre_commit
     remove_legacy_hook
     pre-commit install
