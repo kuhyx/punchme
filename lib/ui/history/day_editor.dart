@@ -2,7 +2,7 @@
 library;
 
 import 'package:design_system/design_system.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/models/day_entry.dart';
 import 'package:punchme/models/local_date.dart';

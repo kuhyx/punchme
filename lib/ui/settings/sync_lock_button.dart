@@ -5,7 +5,7 @@ import 'dart:async';
 
 import 'package:crdt_sync_flutter/crdt_sync_flutter.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/sync/sync_service.dart';
 
 /// Icon only (textgate): shows the lock state the last sync tick published

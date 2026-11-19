@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crdt_sync_flutter/testing/fake_secure_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart' as http_testing;

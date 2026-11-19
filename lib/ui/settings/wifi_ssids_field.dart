@@ -2,7 +2,7 @@
 library;
 
 import 'package:design_system/design_system.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/wifi/current_network_picker.dart';
 import 'package:punchme/wifi/wifi_channel.dart';

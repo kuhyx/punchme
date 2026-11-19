@@ -1,7 +1,7 @@
 /// The home screen's snack bars: where they go, and the tag warnings.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/ui/home/punch_banner.dart';
 
 /// Holds the [ScaffoldMessengerState] the home screen reports through.

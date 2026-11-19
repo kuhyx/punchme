@@ -2,7 +2,7 @@
 library;
 
 import 'package:design_system/design_system.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:punchme/nfc/nfc_service.dart';
 import 'package:punchme/nfc/punch_tag.dart';

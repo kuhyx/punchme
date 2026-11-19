@@ -1,7 +1,7 @@
 /// Choosing which statistics cards steer today's target.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/models/horizon.dart';
 import 'package:punchme/ui/glyphs.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/models/settings.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';

@@ -1,7 +1,7 @@
 /// Offering an alarm for today's target check-out time.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/logic/surplus.dart';
 import 'package:punchme/logic/target_time.dart';
 import 'package:punchme/ui/glyphs.dart';

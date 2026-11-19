@@ -3,8 +3,8 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show MissingPluginException;
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/logic/punch_coordinator.dart';
 import 'package:punchme/nfc/background_punch_channel.dart';

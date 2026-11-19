@@ -5,8 +5,8 @@ import 'dart:async';
 
 import 'package:crdt_sync_flutter/crdt_sync_flutter.dart';
 import 'package:design_system/design_system.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/sync/sync_service.dart';
 import 'package:punchme/ui/glyphs.dart';
 import 'package:punchme/ui/settings/google_sign_in_result.dart';

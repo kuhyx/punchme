@@ -3,7 +3,7 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/save_target.dart';
 import 'package:punchme/logic/checkout_alarm.dart';

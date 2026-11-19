@@ -1,7 +1,7 @@
 /// Offering to set the system alarm after a check-in.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/logic/checkout_alarm.dart';
 import 'package:punchme/logic/day_state.dart';

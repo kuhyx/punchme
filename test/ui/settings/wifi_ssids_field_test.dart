@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:punchme/ui/settings/wifi_ssids_field.dart';
 import 'package:punchme/ui/wifi/current_network_picker.dart';

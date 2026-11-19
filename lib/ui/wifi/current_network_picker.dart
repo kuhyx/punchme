@@ -1,7 +1,7 @@
 /// Adding the Wi-Fi network the phone is on right now.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/ui/wifi/location_rationale.dart';
 import 'package:punchme/wifi/wifi_channel.dart';
 

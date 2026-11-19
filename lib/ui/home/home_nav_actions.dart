@@ -1,7 +1,7 @@
 /// The home app bar's navigation buttons.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/save_target.dart';
 import 'package:punchme/ui/history/history_screen.dart';
