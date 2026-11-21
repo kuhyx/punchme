@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.28+1
+version: 1.0.29+1
 
 environment:
   sdk: ^3.12.2
@@ -75,7 +75,7 @@ dependencies:
   kuhy_credit:
     git:
       url: https://github.com/kuhyx/utils
-      ref: kuhy-credit-v0.3.0
+      ref: kuhy-credit-v0.3.1
       path: kuhy_credit/flutter
 
   # Flutter 3.50 deprecates package:flutter/material.dart; design_system sits

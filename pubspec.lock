@@ -478,11 +478,11 @@ packages:
     dependency: "direct main"
     description:
       path: "kuhy_credit/flutter"
-      ref: "kuhy-credit-v0.3.0"
-      resolved-ref: c3946412729991bf1e9c3b6a5cc55dbe80419fc0
+      ref: "kuhy-credit-v0.3.1"
+      resolved-ref: "2352c177232a4b4594573a3b1126697ef32851f7"
       url: "https://github.com/kuhyx/utils"
     source: git
-    version: "0.3.0"
+    version: "0.3.1"
   leak_tracker:
     dependency: transitive
     description:
