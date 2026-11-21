@@ -5,7 +5,7 @@ description: >-
 publish_to: "none"
 
 # X.Y.Z only; the build suffix is set by CI at release time.
-version: 1.0.27+1
+version: 1.0.28+1
 
 environment:
   sdk: ^3.12.2
@@ -70,6 +70,13 @@ dependencies:
   # exposes so a test can stand in for the Firebase token exchange, which
   # `depend_on_referenced_packages` requires be an explicit dependency.
   http: 1.6.0
+
+  # Shared "Created by kuhy" logo credit: M1 logo button -> panel -> website.
+  kuhy_credit:
+    git:
+      url: https://github.com/kuhyx/utils
+      ref: kuhy-credit-v0.3.0
+      path: kuhy_credit/flutter
 
   # Flutter 3.50 deprecates package:flutter/material.dart; design_system sits
   # on material_ui, so the app must too or its widgets lose

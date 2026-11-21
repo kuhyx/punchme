@@ -4,6 +4,7 @@ library;
 import 'dart:async';
 
 import 'package:design_system/design_system.dart';
+import 'package:kuhy_credit/kuhy_credit.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:punchme/data/day_repository.dart';
 import 'package:punchme/export/save_target.dart';
@@ -195,6 +196,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             share: widget.share,
             now: widget.now,
           ),
+          const SizedBox(height: AppSpacing.lg),
+          const KuhyCredit(size: 40),
         ],
       ),
     );
