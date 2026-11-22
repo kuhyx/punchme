@@ -140,6 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               if (failure.needsSettings)
                 IconButton(
                   key: const Key('onboarding-settings'),
+                  tooltip: 'Settings',
                   onPressed: widget.openSettings,
                   icon: const Icon(
                     Icons.settings,
@@ -181,6 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         primary,
         IconButton(
           key: const Key('onboarding-skip'),
+          tooltip: 'Skip',
           onPressed: _skip,
           icon: Icon(skipIcon, semanticLabel: skipLabel),
         ),

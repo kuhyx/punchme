@@ -22,6 +22,7 @@ import 'package:punchme/ui/wifi/location_rationale.dart';
 
 import '../support/fake_day_repository.dart';
 import '../support/fake_wifi.dart';
+import '../support/no_words_harness.dart';
 
 /// textgate: nothing kuhy sees carries a word Claude wrote.
 ///
@@ -30,55 +31,20 @@ import '../support/fake_wifi.dart';
 /// such as `8h 04m`, and user data (the fakes below use digit-only SSIDs and
 /// tag labels) pass. The only kept chrome is the app's proper noun.
 void main() {
-  // Any letter at all: weekday initials (`M T W`) are words too. Durations
-  // (`8h 04m`) are the one letter-bearing value, so they are cut out first.
-  final word = RegExp('[A-Za-z]');
-  final duration = RegExp(r'-?\+?\d+h \d{2}m');
-  const keep = <String>{'punchme'};
-
-  DateTime now() => DateTime(2026, 8, 25, 12);
-
-  List<DayEntry> august({bool openToday = false}) => <DayEntry>[
-    for (var d = 1; d <= 25; d++)
-      DayEntry(
-        dateKey: '2026-08-${d.toString().padLeft(2, '0')}',
-        checkIn: DateTime(2026, 8, d, 9),
-        checkOut: d == 25 && openToday ? null : DateTime(2026, 8, d, 17),
-      ),
-  ];
-
-  /// Every painted string with a word in it, minus [keep].
-  List<String> wordsOn(WidgetTester tester) =>
-      <String>[
-        for (final e in find.byType(RichText).evaluate())
-          (e.widget as RichText).text.toPlainText(),
-      ].where((s) {
-        final bare = s.replaceAll(duration, '');
-        return word.hasMatch(bare) && !keep.contains(s.trim());
-      }).toList();
-
-  Future<void> pump(WidgetTester tester, Widget home) async {
-    tester.view.physicalSize = const Size(1080, 12000);
-    tester.view.devicePixelRatio = 2.625;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(home: home));
-    await tester.pumpAndSettle();
-  }
-
-  void expectNoWords(WidgetTester tester) =>
-      expect(wordsOn(tester), isEmpty, reason: 'painted words');
-
   testWidgets('home, ready to check in', (tester) async {
-    await pump(tester, HomeScreen(repository: FakeDayRepository(), now: now));
+    await pumpScreen(
+      tester,
+      HomeScreen(repository: FakeDayRepository(), now: noWordsNow),
+    );
     expectNoWords(tester);
   });
 
   testWidgets('home, checked in, pending tap', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       HomeScreen(
         repository: FakeDayRepository(days: august(openToday: true)),
-        now: now,
+        now: noWordsNow,
       ),
     );
     expectNoWords(tester);
@@ -89,7 +55,7 @@ void main() {
   });
 
   testWidgets('home, checked out', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       HomeScreen(
         repository: FakeDayRepository(days: august()),
@@ -100,40 +66,40 @@ void main() {
   });
 
   testWidgets('history and day editor', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       HistoryScreen(
         repository: FakeDayRepository(days: august()),
-        now: now,
+        now: noWordsNow,
       ),
     );
     expectNoWords(tester);
-    await pump(
+    await pumpScreen(
       tester,
       DayEditor(
-        entry: DayEntry(dateKey: '2026-08-25', checkIn: now()),
+        entry: DayEntry(dateKey: '2026-08-25', checkIn: noWordsNow()),
       ),
     );
     expectNoWords(tester);
   });
 
   testWidgets('stats', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       StatsScreen(
         repository: FakeDayRepository(days: august()),
-        now: now,
+        now: noWordsNow,
       ),
     );
     expectNoWords(tester);
   });
 
   testWidgets('settings, whole list', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       SettingsScreen(
         repository: FakeDayRepository(days: august()),
-        now: now,
+        now: noWordsNow,
         syncProbe: () async => false,
         syncConnect: () async => GoogleSignInStatus.cancelled,
       ),
@@ -142,7 +108,7 @@ void main() {
   });
 
   testWidgets('onboarding', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       OnboardingScreen(
         repository: FakeDayRepository(),
@@ -157,7 +123,7 @@ void main() {
   });
 
   testWidgets('location rationale dialog', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       Builder(
         builder: (context) => TextButton(
@@ -172,7 +138,7 @@ void main() {
   });
 
   testWidgets('checkout alarm dialog', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       CheckOutAlarmDialog(
         target: TargetToday(
@@ -193,7 +159,7 @@ void main() {
   });
 
   testWidgets('write tag screen', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       WriteTagScreen(
         service: NfcService(
@@ -220,7 +186,7 @@ void main() {
       punchBanner(
         result: PunchResult.committed(
           state: DayState.checkedIn,
-          at: now(),
+          at: noWordsNow(),
           checkedIn: true,
           tagLabel: '42',
         ),
@@ -229,7 +195,7 @@ void main() {
       punchBanner(
         result: PunchResult.committed(
           state: DayState.checkedOut,
-          at: now(),
+          at: noWordsNow(),
           checkedIn: false,
           tagLabel: kDefaultTagLabel,
         ),
@@ -239,7 +205,7 @@ void main() {
         punchBanner(
           result: PunchResult.refused(
             state: DayState.checkedIn,
-            at: now(),
+            at: noWordsNow(),
             refusal: refusal,
           ),
           onUndo: () {},
@@ -248,17 +214,17 @@ void main() {
       unknownTagVersionBanner(),
     ];
     for (final bar in bars) {
-      await pump(tester, Scaffold(body: bar.content));
+      await pumpScreen(tester, Scaffold(body: bar.content));
       expectNoWords(tester);
     }
   });
 
   testWidgets('settings, sync connected', (tester) async {
-    await pump(
+    await pumpScreen(
       tester,
       SettingsScreen(
         repository: FakeDayRepository(),
-        now: now,
+        now: noWordsNow,
         syncProbe: () async => true,
         syncConnect: () async => GoogleSignInStatus.cancelled,
       ),

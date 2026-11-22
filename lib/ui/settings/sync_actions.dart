@@ -149,8 +149,7 @@ class _SyncActionsState extends State<SyncActions> {
                     icons: failure.icons,
                     spoken: failure.spoken,
                   ),
-                  // The platform's own error, not app chrome: kept visible
-                  // because it is the only clue to a misconfiguration.
+                  // The platform's own error, not chrome: a misconfig clue.
                   if (failure.detail != null)
                     Expanded(child: Text(failure.detail!)),
                 ],
@@ -158,6 +157,7 @@ class _SyncActionsState extends State<SyncActions> {
             ),
             IconButton(
               key: const Key('snack-retry'),
+              tooltip: 'Retry',
               onPressed: _connect,
               icon: const Icon(Icons.refresh, semanticLabel: 'Retry'),
             ),

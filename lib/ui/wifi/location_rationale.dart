@@ -82,11 +82,13 @@ Future<bool> showLocationRationaleDialog(BuildContext context) async =>
         actions: <Widget>[
           IconButton(
             key: const Key('rationale-not-now'),
+            tooltip: 'Later',
             onPressed: () => Navigator.of(dialogContext).pop(false),
             icon: const Icon(Icons.close, semanticLabel: 'Not now'),
           ),
           IconButton(
             key: const Key('rationale-continue'),
+            tooltip: 'Continue',
             onPressed: () => Navigator.of(dialogContext).pop(true),
             icon: const Icon(Icons.check, semanticLabel: 'Continue'),
           ),

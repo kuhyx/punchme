@@ -98,6 +98,7 @@ SnackBar punchBanner({
         ),
         IconButton(
           key: const Key('snack-undo'),
+          tooltip: 'Undo',
           onPressed: onUndo,
           icon: const Icon(Icons.undo, semanticLabel: 'Undo'),
         ),

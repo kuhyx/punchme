@@ -92,6 +92,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(),
       floatingActionButton: FloatingActionButton(
         key: const Key('add-day'),
+        tooltip: 'Add',
         onPressed: _addMissingDay,
         child: const Icon(Icons.add, semanticLabel: 'Add a missing day'),
       ),
@@ -111,6 +112,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     IconButton(
+                      key: const Key('history-prev'),
+                      tooltip: 'Previous',
                       onPressed: () => _shift(-1),
                       icon: const Icon(Icons.chevron_left),
                     ),
@@ -127,6 +130,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                     IconButton(
+                      key: const Key('history-next'),
+                      tooltip: 'Next',
                       onPressed: atLatest ? null : () => _shift(1),
                       icon: const Icon(Icons.chevron_right),
                     ),

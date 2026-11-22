@@ -120,6 +120,7 @@ class _DayEditorState extends State<DayEditor> {
       actions: <Widget>[
         IconButton(
           key: const Key('day-delete'),
+          tooltip: 'Delete',
           icon: const Icon(Icons.delete_outline, semanticLabel: 'Delete'),
           onPressed: () => Navigator.of(
             context,
@@ -127,11 +128,13 @@ class _DayEditorState extends State<DayEditor> {
         ),
         IconButton(
           key: const Key('day-cancel'),
+          tooltip: 'Cancel',
           icon: const Icon(Icons.close, semanticLabel: 'Cancel'),
           onPressed: () => Navigator.of(context).pop(),
         ),
         IconButton(
           key: const Key('day-save'),
+          tooltip: 'Save',
           icon: const Icon(Icons.check, semanticLabel: 'Save'),
           onPressed: () => Navigator.of(context).pop(DayEdit(entry: _result)),
         ),

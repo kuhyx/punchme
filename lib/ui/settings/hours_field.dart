@@ -29,6 +29,8 @@ class HoursField extends StatelessWidget {
     return Row(
       children: <Widget>[
         IconButton(
+          key: const Key('hours-less'),
+          tooltip: 'Less',
           onPressed: canDecrease ? () => onChanged(value - hoursStep) : null,
           icon: const Icon(Icons.remove, semanticLabel: 'Less'),
         ),
@@ -44,6 +46,8 @@ class HoursField extends StatelessWidget {
           ),
         ),
         IconButton(
+          key: const Key('hours-more'),
+          tooltip: 'More',
           onPressed: canIncrease ? () => onChanged(value + hoursStep) : null,
           icon: const Icon(Icons.add, semanticLabel: 'More'),
         ),

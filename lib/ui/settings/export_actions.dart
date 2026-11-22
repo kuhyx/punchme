@@ -61,14 +61,20 @@ class ExportActions extends StatelessWidget {
     runSpacing: AppSpacing.sm,
     children: <Widget>[
       IconButton(
+        key: const Key('export-csv'),
+        tooltip: 'CSV',
         onPressed: _exportCsv,
         icon: const Icon(Icons.table_chart_outlined, semanticLabel: 'CSV'),
       ),
       IconButton(
+        key: const Key('export-json'),
+        tooltip: 'JSON',
         onPressed: _exportJson,
         icon: const Icon(Icons.data_object, semanticLabel: 'JSON'),
       ),
       IconButton(
+        key: const Key('export-calendar'),
+        tooltip: 'Calendar',
         onPressed: _exportIcs,
         icon: const Icon(Icons.event_outlined, semanticLabel: 'Calendar'),
       ),

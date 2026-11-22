@@ -44,18 +44,21 @@ class HomeNavActions extends StatelessWidget {
     children: <Widget>[
       IconButton(
         key: const Key('nav-stats'),
+        tooltip: 'Statistics',
         icon: const Icon(Icons.insights_outlined, semanticLabel: 'Statistics'),
         onPressed: () =>
             _open(context, StatsScreen(repository: repository, now: now)),
       ),
       IconButton(
         key: const Key('nav-history'),
+        tooltip: 'History',
         icon: const Icon(Icons.history, semanticLabel: 'History'),
         onPressed: () =>
             _open(context, HistoryScreen(repository: repository, now: now)),
       ),
       IconButton(
         key: const Key('nav-settings'),
+        tooltip: 'Settings',
         icon: const Icon(Icons.settings_outlined, semanticLabel: 'Settings'),
         onPressed: () => _open(
           context,

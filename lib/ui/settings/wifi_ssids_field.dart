@@ -68,6 +68,7 @@ class _WifiSsidsFieldState extends State<WifiSsidsField> {
       children: <Widget>[
         IconButton(
           key: const Key('add-current-network'),
+          tooltip: 'Add-network',
           onPressed: _addCurrent,
           icon: const Icon(Icons.wifi, semanticLabel: 'Add current network'),
         ),
@@ -82,6 +83,7 @@ class _WifiSsidsFieldState extends State<WifiSsidsField> {
           if (failure.needsSettings)
             IconButton(
               key: const Key('wifi-open-settings'),
+              tooltip: 'Settings',
               onPressed: widget.openSettings,
               icon: const Icon(
                 Icons.settings,

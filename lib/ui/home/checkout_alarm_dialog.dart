@@ -175,6 +175,7 @@ class CheckOutAlarmDialog extends StatelessWidget {
       actions: <Widget>[
         IconButton(
           key: const Key('alarm-not-now'),
+          tooltip: 'Later',
           icon: const Icon(Icons.close, semanticLabel: 'Not now'),
           onPressed: () => Navigator.of(context).pop(false),
         ),

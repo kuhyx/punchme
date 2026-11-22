@@ -120,6 +120,7 @@ class _FreeDaysFieldState extends State<FreeDaysField> {
           children: <Widget>[
             IconButton(
               key: const Key('month-prev'),
+              tooltip: 'Previous',
               icon: const Icon(
                 Icons.chevron_left,
                 semanticLabel: 'Previous month',
@@ -139,6 +140,7 @@ class _FreeDaysFieldState extends State<FreeDaysField> {
             ),
             IconButton(
               key: const Key('month-next'),
+              tooltip: 'Next',
               icon: const Icon(
                 Icons.chevron_right,
                 semanticLabel: 'Next month',
