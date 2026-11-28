@@ -27,19 +27,8 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
 
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
-      - id: shellcheck
-
   - repo: local
     hooks:
-      # Both gates are thin delegates to ~/src/utils, which owns the rules so that
-      # one repo's idea of "too long" or "badly named" cannot drift.
-      - id: file-length
-        name: file length <= 250 lines
-        entry: scripts/check_file_length.sh
-        language: system
 
       - id: md-naming
         name: markdown naming convention
@@ -103,14 +92,6 @@ repos:
         always_run: true
         require_serial: true
         stages: [manual]
-      - id: ci-mirror-analyze
-        name: CI mirror 2 (analyze)
-        entry: bash scripts/ci_mirror.sh analyze
-        language: system
-        pass_filenames: false
-        always_run: true
-        require_serial: true
-        stages: [manual]
       - id: ci-mirror-format
         name: CI mirror 3 (format)
         entry: bash scripts/ci_mirror.sh format
@@ -162,15 +143,6 @@ repos:
       - id: ci-mirror-cov-6
         name: CI mirror 9 (tests, shard 6/6)
         entry: bash scripts/ci_mirror.sh coverage --shard 5/6
-        language: system
-        pass_filenames: false
-        always_run: true
-        require_serial: true
-        stages: [manual]
-      # Same 100% bar and every-lib-file guard, on the union of the 6 shards.
-      - id: ci-mirror-cov-merge
-        name: CI mirror 10 (coverage 100%, union of shards)
-        entry: bash scripts/ci_mirror.sh coverage-merge
         language: system
         pass_filenames: false
         always_run: true

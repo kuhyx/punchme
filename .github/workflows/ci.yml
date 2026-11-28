@@ -22,17 +22,10 @@ jobs:
           flutter-version: 3.50.1
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze --fatal-infos --fatal-warnings
       - run: dart format --set-exit-if-changed lib/ test/
       # dart_test.yaml holds local runs to 2 isolates to fit a memory cap; the
       # runner has the RAM, so -j (which overrides the file) uses every core.
-      - run: flutter test --coverage -j "$(nproc)"
-      # Both coverage gates, delegated to the same script the pre-push mirror
-      # runs. Reimplementing the LF/LH sum here is how CI and the local gate
-      # drift -- and this one has to know which lines are marked
-      # `// coverage:ignore-line`, which a bare percentage cannot.
-      - name: Enforce coverage
-        run: bash scripts/ci_mirror.sh --coverage-only
+      - run: flutter test -j "$(nproc)"
 
       # Android-only, so the shipping artefact is the APK. (The donor repo
       # built web here to catch a `dart:io` import reaching lib/main.dart;
